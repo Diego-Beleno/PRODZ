@@ -348,3 +348,99 @@ border: 2px solid rgba(255,255,255,0.05) !important; /* Borde base visible pero 
     }
     .beat-info h3 { font-size: 0.7rem; }
 }
+
+.image-container {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.play-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--accent-color);
+    opacity: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+}
+
+.beat-card.active .play-overlay,
+.image-container:hover .play-overlay {
+    opacity: 0.3; /* Tu 30% de opacidad */
+}
+
+/* Estilo de los iconos SVG */
+.icon-wrapper svg {
+    width: 50px;
+    height: 50px;
+    fill: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
+}
+
+/* Control de visibilidad de iconos */
+.icon-pause { opacity: 0; }
+.beat-card.active .icon-play { opacity: 0; }
+.beat-card.active .icon-pause { opacity: 1; }
+
+/* Datos del beat (Key/BPM) */
+.beat-meta {
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+/* Waveform centrada */
+.waveform-canvas {
+    margin: 10px 0;
+    height: 40px !important; /* Ajusta según prefieras */
+}
+
+/* Texto de ayuda debajo del título principal */
+.toca-escuchar {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #555;
+    margin-top: -15px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.icon-wrapper {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+.icon-play, .icon-pause {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    fill: white;
+    transition: opacity 0.3s ease;
+}
+
+/* Si la card NO está activa, ocultamos pausa */
+.beat-card:not(.active) .icon-pause { opacity: 0; pointer-events: none; }
+.beat-card:not(.active) .icon-play { opacity: 1; }
+
+/* Si la card ESTÁ activa, ocultamos play */
+.beat-card.active .icon-play { opacity: 0; pointer-events: none; }
+.beat-card.active .icon-pause { opacity: 1; }
+
+.toca-escuchar {
+    color: #666;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
