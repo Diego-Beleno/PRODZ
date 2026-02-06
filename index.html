@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat Catalog | Prodz</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="is-loading">
+
+    <div id="loader" class="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <nav class="navbar" id="main-nav">
+        <div class="nav-links">
+            <a href="#nuevos">CATÁLOGO</a>
+            <a href="#servicios">SERVICIOS</a>
+            <a href="#legal">LEGAL</a>
+        </div>
+    </nav>
+
+
+
+<main>
+    <section id="nuevos" class="section-beats-featured">
+        <div class="container-title">
+            <h2 class="section-title">LANZAMIENTOS RECIENTES</h2>
+        </div>
+        
+        <div class="beat-grid grid-2x2">
+            <article class="beat-card" data-color="#ff1111" data-audio="assets/audio/BACCO.mp3" data-name="BACCO">
+                <img src="assets/images/Bacco.jpeg" alt="Bacco" class="beat-cover">
+                <div class="beat-info">
+                    <h3>BACCO</h3>
+                    <button class="btn-play">PLAY</button>
+                    <canvas class="waveform-canvas"></canvas>
+                    <button class="btn-license">ADQURIR LICENCIA</button>
+                </div>
+            </article>
+
+            <article class="beat-card" data-color="#F5EB27" data-audio="assets/audio/馬鹿.mp3" data-name="BAKA">
+                <img src="assets/images/generic.png" alt="Baka" class="beat-cover">
+                <div class="beat-info">
+                    <h3>馬鹿</h3>
+                    <button class="btn-play">PLAY</button>
+                    <canvas class="waveform-canvas"></canvas>
+                    <button class="btn-license">ADQURIR LICENCIA</button>
+                </div>
+            </article>
+
+            <article class="beat-card" data-color="#F527E0" data-audio="assets/audio/Hello_Kitty.mp3" data-name="HELLO KITTY">
+                <img src="assets/images/Hello Kitty.jpeg" alt="Hello Kitty" class="beat-cover">
+                <div class="beat-info">
+                    <h3>HELLO KITTY</h3>
+                    <button class="btn-play">PLAY</button>
+                    <canvas class="waveform-canvas"></canvas>
+                    <button class="btn-license">ADQURIR LICENCIA</button>
+                </div>
+            </article>
+
+            <article class="beat-card" data-color="#00FFCC" data-audio="assets/audio/Jazzy.mp3" data-name="NUEVO">
+                <img src="assets/images/generic.png" alt="Nuevo" class="beat-cover">
+                <div class="beat-info">
+                    <h3>JAZZY</h3>
+                    <button class="btn-play">PLAY</button>
+                    <canvas class="waveform-canvas"></canvas>
+                    <button class="btn-license">ADQURIR LICENCIA</button>
+                </div>
+            </article>
+        </div> </section>
+
+   <section id="catalogo-scroll" class="section-horizontal">
+    <div class="container-title">
+        <h2 class="section-title">CATÁLOGO COMPLETO</h2>
+    </div>
+    <div class="horizontal-scroll-container">
+        <article class="beat-card" data-color="#4444FF" data-audio="assets/audio/Asset.mp3" data-name="ASSET">
+            <img src="assets/images/Bacco.jpeg" alt="Asset" class="beat-cover">
+            <div class="beat-info">
+                <h3>ASSET</h3>
+                <button class="btn-play">PLAY</button>
+                <canvas class="waveform-canvas"></canvas>
+                <button class="btn-license">ADQURIR LICENCIA</button>
+            </div>
+        </article>
+        <article class="beat-card" data-color="#99FF00" data-audio="assets/audio/5005.mp3" data-name="5005">
+            <img src="assets/images/generic.png" alt="5005" class="beat-cover">
+            <div class="beat-info">
+                <h3>5005</h3>
+                <button class="btn-play">PLAY</button>
+                <canvas class="waveform-canvas"></canvas>
+                <button class="btn-license">ADQURIR LICENCIA</button>
+            </div>
+        </article>
+        <article class="beat-card" data-color="#AD27F5" data-audio="assets/audio/Voxy.mp3" data-name="VOXY">
+            <img src="assets/images/Hello Kitty.jpeg" alt="Voxy" class="beat-cover">
+            <div class="beat-info">
+                <h3>VOXY</h3>
+                <button class="btn-play">PLAY</button>
+                <canvas class="waveform-canvas"></canvas>
+                <button class="btn-license">ADQURIR LICENCIA</button>
+            </div>
+        </article>
+    </div>
+</section>
+<section id="servicios" class="section-services">
+    <h2 class="section-title">SERVICIOS PROFESIONALES</h2>
+    <div class="services-container">
+        <div class="services-grid">
+            <div class="service-category">
+                <h3>ADQURIR LICENCIAS DE BEATS</h3>
+                <ul class="price-list">
+                    <li>MP3 <span>$15</span></li>
+                    <li>WAV <span>$20</span></li>
+                    <li>PREMIUM (STEMS) <span>$25</span></li>
+                </ul>
+            </div>
+            <div class="service-category">
+                <h3>MIX & MASTER</h3>
+                <ul class="price-list">
+                    <li>MASTER SINGLE <span>$15</span></li>
+                    <li>MIX & MASTER BÁSICO <span>$30</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <script src="script.js"></script>
+</body>
+</html>

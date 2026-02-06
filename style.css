@@ -1,0 +1,350 @@
+/* --- 1. CONFIGURACIÓN BASE --- */
+:root {
+    --bg-color: #050505; /* Fondo casi negro por defecto */
+    --text-color: #ffffff;
+    --accent-color: #ffffff; /* Cambiará dinámicamente con JS */
+    --card-bg: #111111;
+    --transition-speed: 0.4s;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    -webkit-tap-highlight-color: transparent; /* Quita el cuadro azul en móviles */
+    user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-select: none;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif; /* Fuente moderna y limpia */
+    overflow-x: hidden; /* Evita scroll horizontal global */
+    transition: background-color var(--transition-speed) ease;
+}
+
+/* --- 2. LOADER --- */
+.loader {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--text-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- 3. NAVBAR (STICKY) --- */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(10px); /* Efecto cristal moderno */
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.nav-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    transition: color var(--transition-speed);
+}
+
+/* --- 4. SECCIÓN BEATS DESTACADOS --- */
+.section-beats-featured {
+    height: calc(100vh - 80px); /* Ajusta para que quepa en una pantalla */
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+.beat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas fijas */
+    gap: 20px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* --- 5. BEAT CARD (UNIDAD INDEPENDIENTE) --- */
+.beat-card {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: border-color 0.8s ease, transform 0.3s ease;
+}
+
+.beat-cover {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    filter: grayscale(20%);
+}
+
+.beat-info h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.waveform-canvas {
+    width: 100%;
+    height: 60px;
+    background: #1a1a1a;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+/* --- 6. BOTONES --- */
+.btn-play, .btn-license, .service-btn {
+    width: 100%;
+    padding: 12px;
+    background: #ffffff;
+    color: #000;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    transition: background-color var(--transition-speed);
+}
+
+/* Clase activa (se aplicará con JS) */
+.beat-card.active .btn-license {
+    background-color: var(--accent-color);
+}
+
+/* --- 7. CATÁLOGO (SCROLL HORIZONTAL) --- */
+.section-catalog {
+    padding: 60px 20px;
+    overflow-x: auto; /* Solo scroll en esta sección */
+    white-space: nowrap;
+}
+
+.horizontal-scroll-wrapper {
+    display: inline-flex;
+    gap: 20px;
+}
+
+.horizontal-scroll-wrapper .beat-card {
+    width: 300px; /* Tamaño fijo para el catálogo extenso */
+}
+
+/* --- 8. SERVICIOS --- */
+.section-services {
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    max-width: 1000px;
+    margin: 40px auto;
+}
+
+/* --- 9. RESPONSIVE (MÓVILES) CORREGIDO --- */
+@media (max-width: 768px) {
+    .beat-grid.grid-2x2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        padding: 10px;
+    }
+
+    /* Ajustamos el tamaño de las tarjetas para que no se desborden */
+    .beat-card {
+        padding: 8px !important;
+        gap: 8px !important;
+    }
+
+    .beat-info h3 {
+        font-size: 0.rem !important; /* Texto más pequeño para que quepa */
+        margin-bottom: 5px !important;
+    }
+
+    .waveform-canvas {
+        height: 35px !important; /* Onda más delgada en móvil */
+    }
+
+    .btn-play, .btn-license {
+        padding: 8px !important;
+        font-size: 0.55rem !important;
+    }
+
+    /* Aseguramos que el título siempre esté arriba */
+    .section-beats-featured {
+        flex-direction: column !important;
+        height: auto !important;
+        padding-top: 40px !important;
+    }
+}
+
+/* --- 10. NUEVA SECCIÓN: SCROLL HORIZONTAL INDEPENDIENTE --- */
+/* Añade esto al final de tu archivo para habilitar el catálogo deslizable */
+
+.section-horizontal {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+.horizontal-scroll-container {
+    display: flex !important;
+    overflow-x: auto !important; /* Habilita el deslizamiento lateral */
+    gap: 15px;
+    padding: 20px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; /* Suavidad en iPhone */
+}
+
+/* Estilo para las tarjetas dentro del scroll horizontal */
+.horizontal-scroll-container .beat-card {
+    min-width: 140px !important; 
+    max-width: 140px !important;
+    padding: 10px !important;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+}
+
+.horizontal-scroll-container .beat-info h3 {
+    font-size: 0.65rem !important; /* Texto acorde al tamaño */
+}
+
+/* --- ESTILOS DE SERVICIOS Y TARIFAS --- */
+.services-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.service-category {
+    background: #0a0a0a;
+    padding: 25px;
+    border: 1px solid #1a1a1a;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.service-category h3 {
+    color: var(--accent-color); /* Cambia con el beat */
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 10px;
+}
+
+.price-list {
+    list-style: none;
+}
+
+.price-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.price-list li span {
+    color: #fff;
+    font-weight: bold;
+}
+
+.legal-box {
+    margin-top: 60px;
+    padding: 20px;
+    background: #000;
+    border: 1px dashed #333;
+    font-size: 0.7rem;
+    color: #555;
+    line-height: 1.6;
+}
+/* --- MEJORAS ESTÉTICAS --- */
+:root {
+    --border-radius-main: 15px; /* Bordes más redondeados */
+}
+
+/* Transición suave para los enlaces de la navbar */
+html { scroll-behavior: smooth; }
+
+/* Título de sección */
+.section-title {
+width: 100%;
+    text-align: center;
+    padding: 40px 0 20px 0;
+    font-size: 1.3rem !important; /* Más grande */
+    font-weight: 900 !important; /* Más llena/negrita */
+    letter-spacing: 2px;
+    color: #ffffff !important; /* Forzado a blanco */
+    text-transform: uppercase;
+}
+
+/* Redondear todo */
+.beat-card, .beat-cover, .btn-play, .btn-license, .waveform-canvas, .service-category {
+    border-radius: 8px !important;
+}
+
+/* Borde dinámico al estar activo */
+.beat-card {
+border: 2px solid rgba(255,255,255,0.05) !important; /* Borde base visible pero sutil */
+    transition: border-color 0.4s ease, transform 0.3s ease;
+}
+
+.beat-card.active {
+    border: 2px solid var(--accent-color) !important; /* Forzamos el color dinámico */
+}
+
+/* Color dinámico al botón Play activo */
+.beat-card.active .btn-play {
+    background-color: var(--accent-color) !important;
+    color: #000;
+}
+
+/* Diseño 2x2 y consistencia de tamaño */
+@media (max-width: 768px) {
+    .beat-grid.grid-2x2 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px;
+    }
+    .beat-card {
+        padding: 10px;
+    }
+    .beat-info h3 { font-size: 0.7rem; }
+}
