@@ -444,3 +444,124 @@ border: 2px solid rgba(255,255,255,0.05) !important; /* Borde base visible pero 
     margin-bottom: 20px;
     text-transform: uppercase;
 }
+
+/* --- NUEVAS CORRECCIONES --- */
+
+/* 1. Evita que el overlay se salga por abajo de la foto */
+.image-container img {
+    display: block;
+    width: 100%;
+}
+
+/* 2. Iconos Play/Pause sólidos y blancos */
+.icon-wrapper svg path {
+    fill: #ffffff !important;
+}
+
+/* 3. Estética de los botones nuevos del final */
+.custom-beats-services {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 60px 20px;
+}
+
+.service-btn-custom {
+    background: transparent;
+    color: white;
+    border: 1px solid #333;
+    padding: 18px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 500px;
+    text-transform: uppercase;
+}
+
+.service-btn-custom:hover {
+    background: white;
+    color: black;
+    border-color: white;
+}
+
+/* Estilos para el Logo */
+.loader-logo {
+    width: 200px; /* Ajusta el tamaño */
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between; /* Empuja logo a izq y links a der */
+    align-items: center;
+    max-width: 100%;       /* Cambiado de 600px a 100% para dar más aire */
+    padding: 0 0.5px;       /* Ajusta este número si quieres que esté más o menos pegado al borde */
+    margin: 0 auto;
+    height: 50%;
+}
+
+.nav-logo {
+    height: 25px; /* Ajusta según tu logo */
+    width: 25px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
+.section-legal {
+    padding: 80px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.legal-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.legal-item h3 {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+    text-transform: uppercase;
+}
+
+.legal-item p {
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.3s ease;
+}
+
+.logo-link:hover {
+    transform: scale(1.05); /* Pequeño efecto al pasar el mouse */
+}
+
+.nav-logo {
+    height: 25px; /* Ajustado ligeramente el tamaño */
+    width: auto;  /* Que mantenga la proporción */
+}
+
+/* Ajuste para que los links no queden pegados si la pantalla es muy grande */
+.nav-links {
+    display: flex;
+    gap: 30px;
+}

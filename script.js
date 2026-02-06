@@ -74,14 +74,22 @@ async function drawWaveform(audioUrl, canvas, color) {
 
 function updateWaveformProgress(canvas, audio, color) {
     const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
     const progress = audio.currentTime / audio.duration;
-    const width = canvas.width * progress;
+
+    // 1. Guardamos la onda gris que ya dibujamos al principio
+    // En lugar de borrar y redescargar, usamos el modo 'source-atop'
+    // para pintar el progreso solo donde hay pixeles de la onda.
+    
+    ctx.save(); // Guardamos el estado limpio
     ctx.globalCompositeOperation = 'source-atop';
     ctx.fillStyle = color;
-    ctx.fillRect(0, 0, width, canvas.height);
-    ctx.globalCompositeOperation = 'source-over';
+    
+    // Dibujamos el rectángulo de progreso
+    ctx.fillRect(0, 0, width * progress, height);
+    ctx.restore(); // Restauramos el estado
 }
-
 function updateGlobalTheme(color) {
     document.documentElement.style.setProperty('--accent-color', color);
     document.body.style.backgroundImage = `radial-gradient(circle at top, ${color}22 0%, #050505 100%)`;
@@ -117,4 +125,25 @@ document.querySelectorAll('.waveform-canvas').forEach((canvas) => {
             activeAudio.currentTime = percentage * activeAudio.duration;
         }
     });
+});
+
+// ESCUCHADOR DE CLICKS PARA WHATSAPP (Pegar al final del JS)
+document.addEventListener('click', (e) => {
+    // Reemplaza con tu número real
+    const numeroTelefono = "584246603660"; 
+
+    // Botón de Licencia en la tarjeta
+    if (e.target.classList.contains('btn-license')) {
+        const card = e.target.closest('.beat-card');
+        const nombreBeat = card.getAttribute('data-name');
+        const texto = encodeURIComponent(`Hola! Estoy interesado/a en adquirir una licencia para usar el beat: ${nombreBeat}`);
+        window.open(`https://wa.me/${numeroTelefono}?text=${texto}`, '_blank');
+    }
+
+    // Botones de servicios personalizados
+    if (e.target.classList.contains('service-btn-custom')) {
+        const mensajeServicio = e.target.getAttribute('data-msg');
+        const texto = encodeURIComponent(mensajeServicio);
+        window.open(`https://wa.me/${numeroTelefono}?text=${texto}`, '_blank');
+    }
 });
