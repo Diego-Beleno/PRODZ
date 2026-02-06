@@ -502,7 +502,7 @@ border: 2px solid rgba(255,255,255,0.05) !important; /* Borde base visible pero 
     max-width: 100%;       /* Cambiado de 600px a 100% para dar más aire */
     padding: 0 0.5px;       /* Ajusta este número si quieres que esté más o menos pegado al borde */
     margin: 0 auto;
-    height: 50%;
+    height: 100%;
 }
 
 .nav-logo {
