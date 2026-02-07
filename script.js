@@ -2,18 +2,72 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let activeAudio = null;
 let activeCard = null;
 
-const beatCards = document.querySelectorAll('.beat-card');
+// 1. FUNCIÓN PARA CARGAR EL CATÁLOGO DESDE EL JSON
+// 1. FUNCIÓN PARA CARGAR EL CATÁLOGO DESDE EL JSON
+async function cargarCatalogo() {
+    try {
+        const respuesta = await fetch('beats.json');
+        const beats = await respuesta.json();
+        
+        // Seleccionamos los dos posibles lugares donde irán los beats
+        const contenedorDestacados = document.querySelector('.grid-2x2');
+        const contenedorCatalogo = document.getElementById('catalogo-container');
 
-beatCards.forEach(card => {
+        // Limpiamos contenido previo si existen los contenedores
+        if (contenedorDestacados) contenedorDestacados.innerHTML = '';
+        if (contenedorCatalogo) contenedorCatalogo.innerHTML = '';
+
+        beats.forEach(beat => {
+            const card = document.createElement('article');
+            card.className = 'beat-card';
+            card.setAttribute('data-color', beat.color);
+            card.setAttribute('data-audio', beat.audio);
+            card.setAttribute('data-name', beat.name);
+
+            // Plantilla HTML de la tarjeta
+            card.innerHTML = `
+                <div class="image-container">
+                    <img src="${beat.image}" alt="${beat.name}" class="beat-cover">
+                    <div class="play-overlay">
+                        <div class="icon-wrapper">
+                            <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="beat-info">
+                    <h3>${beat.name}</h3>
+                    <div class="beat-meta"><span>${beat.key}</span> | <span>${beat.bpm} BPM</span></div>
+                    <canvas class="waveform-canvas"></canvas>
+                    <button class="btn-license">ADQUIRIR LICENCIA</button>
+                </div>
+            `;
+
+            // Lógica de clasificación: ¿Va a destacados o al catálogo normal?
+            if (beat.featured && contenedorDestacados) {
+                contenedorDestacados.appendChild(card);
+            } else if (!beat.featured && contenedorCatalogo) {
+                contenedorCatalogo.appendChild(card);
+            }
+
+            // Activamos la lógica (audio, canvas, timeline) para esta tarjeta
+            inicializarCard(card);
+        }); // Cierre del forEach
+
+    } catch (error) {
+        console.error("Error cargando el JSON:", error);
+    }
+} // Cierre de la función
+// 2. FUNCIÓN PARA ACTIVAR CADA TARJETA CREADA
+function inicializarCard(card) {
     const audioUrl = card.getAttribute('data-audio');
     const color = card.getAttribute('data-color');
     const canvas = card.querySelector('.waveform-canvas');
-    const imgContainer = card.querySelector('.image-container'); // Detectar click en la imagen
+    const imgContainer = card.querySelector('.image-container');
     
     const audio = new Audio(audioUrl);
     drawWaveform(audioUrl, canvas, color);
 
-    // Evento al tocar el contenedor de la imagen
     if(imgContainer) {
         imgContainer.addEventListener('click', () => {
             handlePlayback(audio, card, color);
@@ -23,8 +77,19 @@ beatCards.forEach(card => {
     audio.addEventListener('timeupdate', () => {
         updateWaveformProgress(canvas, audio, color);
     });
-});
 
+    // Timeline: clic en la onda para saltar tiempo
+    canvas.addEventListener('click', (e) => {
+        if (activeCard === card && activeAudio) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = x / canvas.width;
+            activeAudio.currentTime = percentage * activeAudio.duration;
+        }
+    });
+}
+
+// 3. LOGICA DE REPRODUCCIÓN (Tu función original)
 function handlePlayback(audio, card, color) {
     if (activeAudio && activeAudio !== audio) {
         activeAudio.pause();
@@ -46,7 +111,7 @@ function handlePlayback(audio, card, color) {
     }
 }
 
-// --- Funciones de soporte (Waveform y Tema) ---
+// 4. DIBUJO DE ONDA (Tu función original)
 async function drawWaveform(audioUrl, canvas, color) {
     try {
         const response = await fetch(audioUrl);
@@ -68,28 +133,21 @@ async function drawWaveform(audioUrl, canvas, color) {
             }
             ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
         }
-        canvas.dataset.originalData = JSON.stringify(Array.from(data.slice(0, 1000))); // Simplificado para caché
-    } catch (e) { console.error("Error dibujando onda:", e); }
+    } catch (e) { console.error("Error onda:", e); }
 }
 
+// 5. PROGRESO DE ONDA
 function updateWaveformProgress(canvas, audio, color) {
     const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
     const progress = audio.currentTime / audio.duration;
-
-    // 1. Guardamos la onda gris que ya dibujamos al principio
-    // En lugar de borrar y redescargar, usamos el modo 'source-atop'
-    // para pintar el progreso solo donde hay pixeles de la onda.
-    
-    ctx.save(); // Guardamos el estado limpio
+    ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
     ctx.fillStyle = color;
-    
-    // Dibujamos el rectángulo de progreso
-    ctx.fillRect(0, 0, width * progress, height);
-    ctx.restore(); // Restauramos el estado
+    ctx.fillRect(0, 0, canvas.width * progress, canvas.height);
+    ctx.restore();
 }
+
+// 6. TEMA DINÁMICO
 function updateGlobalTheme(color) {
     document.documentElement.style.setProperty('--accent-color', color);
     document.body.style.backgroundImage = `radial-gradient(circle at top, ${color}22 0%, #050505 100%)`;
@@ -99,7 +157,7 @@ function updateGlobalTheme(color) {
     });
 }
 
-// Quitar Loader
+// 7. LOADER Y WHATSAPP
 window.addEventListener('load', () => {
     const loader = document.getElementById('loader');
     setTimeout(() => {
@@ -110,40 +168,20 @@ window.addEventListener('load', () => {
         }, 500);
     }, 500);
 });
-/**
- * INTERACCIÓN EN EL CANVAS (TIMELINE)
- */
-document.querySelectorAll('.waveform-canvas').forEach((canvas) => {
-    canvas.addEventListener('click', (e) => {
-        const card = canvas.closest('.beat-card');
-        
-        // Solo permitimos saltar si este es el audio activo
-        if (activeCard === card && activeAudio) {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const percentage = x / canvas.width;
-            activeAudio.currentTime = percentage * activeAudio.duration;
-        }
-    });
-});
 
-// ESCUCHADOR DE CLICKS PARA WHATSAPP (Pegar al final del JS)
 document.addEventListener('click', (e) => {
-    // Reemplaza con tu número real
     const numeroTelefono = "584246603660"; 
-
-    // Botón de Licencia en la tarjeta
     if (e.target.classList.contains('btn-license')) {
         const card = e.target.closest('.beat-card');
         const nombreBeat = card.getAttribute('data-name');
-        const texto = encodeURIComponent(`Hola! Estoy interesado/a en adquirir una licencia para usar el beat: ${nombreBeat}`);
+        const texto = encodeURIComponent(`Hola! Estoy interesado/a en adquirir una licencia para el beat: ${nombreBeat}`);
         window.open(`https://wa.me/${numeroTelefono}?text=${texto}`, '_blank');
     }
-
-    // Botones de servicios personalizados
     if (e.target.classList.contains('service-btn-custom')) {
         const mensajeServicio = e.target.getAttribute('data-msg');
-        const texto = encodeURIComponent(mensajeServicio);
-        window.open(`https://wa.me/${numeroTelefono}?text=${texto}`, '_blank');
+        window.open(`https://wa.me/${numeroTelefono}?text=${encodeURIComponent(mensajeServicio)}`, '_blank');
     }
 });
+
+// LANZAMIENTO INICIAL
+cargarCatalogo();

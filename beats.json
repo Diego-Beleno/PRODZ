@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Bacco",
+    "color": "#ff1111",
+    "featured": true,
+    "audio": "assets/audio/Bacco.mp3",
+    "image": "assets/images/Bacco.jpg",
+    "key": "Am",
+    "bpm": "140"
+  },
+  {
+    "name": "Mirror",
+    "featured": true,
+    "color": "#00ff00",
+    "audio": "assets/audio/Mirror.mp3",
+    "image": "assets/images/Mirror.jpg",
+    "key": "Cm",
+    "bpm": "140"
+  },
+  {
+    "name": "馬鹿",
+    "featured": true,
+    "color": "#fff700",
+    "audio": "assets/audio/馬鹿.mp3",
+    "image": "assets/images/馬鹿.jpg",
+    "key": "C#m",
+    "bpm": "112"
+  },
+  {
+    "name": "Hello Kitty",
+    "featured": true,
+    "color": "#ff0048",
+    "audio": "assets/audio/Hello Kitty.mp3",
+    "image": "assets/images/Hello Kitty.jpg",
+    "key": "A",
+    "bpm": "99"
+  },
+  {
+    "name": "Jazzy",
+    "featured": false,
+    "color": "#00E6FF",
+    "audio": "assets/audio/Jazzy.mp3",
+    "image": "assets/images/Jazzy.jpg",
+    "key": "Dm",
+    "bpm": "120"
+  },
+  {
+    "name": "5005",
+    "featured": false,
+    "color": "#00ff00",
+    "audio": "assets/audio/5005.mp3",
+    "image": "assets/images/5005.jpg",
+    "key": "Gm",
+    "bpm": "160"
+  },
+  {
+    "name": "Voxy",
+    "featured": false,
+    "color": "#00E6FF",
+    "audio": "assets/audio/Voxy.mp3",
+    "image": "assets/images/Voxy.jpg",
+    "key": "G",
+    "bpm": "120"
+  },
+  {
+    "name": "Asset",
+    "featured": false,
+    "color": "#ff1111",
+    "audio": "assets/audio/Asset.mp3",
+    "image": "assets/images/Bacco.jpg",
+    "key": "Dm",
+    "bpm": "120"
+  }
+]
