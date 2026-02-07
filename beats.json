@@ -3,8 +3,8 @@
     "name": "Bacco",
     "color": "#ff1111",
     "featured": true,
-    "audio": "assets/audio/Bacco.mp3",
-    "image": "assets/images/Bacco.jpg",
+    "audio": "assets/audio/bacco.mp3",
+    "image": "assets/images/bacco.webp",
     "key": "Am",
     "bpm": "140"
   },
@@ -12,8 +12,8 @@
     "name": "Mirror",
     "featured": true,
     "color": "#00ff00",
-    "audio": "assets/audio/Mirror.mp3",
-    "image": "assets/images/Mirror.jpg",
+    "audio": "assets/audio/mirror.mp3",
+    "image": "assets/images/mirror.webp",
     "key": "Cm",
     "bpm": "140"
   },
@@ -22,7 +22,7 @@
     "featured": true,
     "color": "#fff700",
     "audio": "assets/audio/馬鹿.mp3",
-    "image": "assets/images/馬鹿.jpg",
+    "image": "assets/images/馬鹿.webp",
     "key": "C#m",
     "bpm": "112"
   },
@@ -30,8 +30,8 @@
     "name": "Hello Kitty",
     "featured": true,
     "color": "#ff0048",
-    "audio": "assets/audio/Hello Kitty.mp3",
-    "image": "assets/images/Hello Kitty.jpg",
+    "audio": "assets/audio/hello-kitty.mp3",
+    "image": "assets/images/hello-kitty.webp",
     "key": "A",
     "bpm": "99"
   },
@@ -39,8 +39,8 @@
     "name": "Jazzy",
     "featured": false,
     "color": "#00E6FF",
-    "audio": "assets/audio/Jazzy.mp3",
-    "image": "assets/images/Jazzy.jpg",
+    "audio": "assets/audio/jazzy.mp3",
+    "image": "assets/images/jazzy.webp",
     "key": "Dm",
     "bpm": "120"
   },
@@ -49,7 +49,7 @@
     "featured": false,
     "color": "#00ff00",
     "audio": "assets/audio/5005.mp3",
-    "image": "assets/images/5005.jpg",
+    "image": "assets/images/5005.webp",
     "key": "Gm",
     "bpm": "160"
   },
@@ -57,8 +57,8 @@
     "name": "Voxy",
     "featured": false,
     "color": "#00E6FF",
-    "audio": "assets/audio/Voxy.mp3",
-    "image": "assets/images/Voxy.jpg",
+    "audio": "assets/audio/voxy.mp3",
+    "image": "assets/images/voxy.webp",
     "key": "G",
     "bpm": "120"
   },
@@ -66,8 +66,8 @@
     "name": "Asset",
     "featured": false,
     "color": "#ff1111",
-    "audio": "assets/audio/Asset.mp3",
-    "image": "assets/images/Bacco.jpg",
+    "audio": "assets/audio/asset.mp3",
+    "image": "assets/images/bacco.webp",
     "key": "Dm",
     "bpm": "120"
   }
