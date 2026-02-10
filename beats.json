@@ -3,7 +3,7 @@
     "name": "Bacco",
     "color": "#ff1111",
     "featured": true,
-    "audio": "assets/audio/bacco.mp3",
+    "audio": "assets/audio/bacco-test.mp3",
     "image": "assets/images/bacco.webp",
     "key": "Am",
     "bpm": "140"
