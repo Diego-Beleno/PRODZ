@@ -9,11 +9,11 @@ async function cargarCatalogo() {
         const respuesta = await fetch('beats.json');
         const beats = await respuesta.json();
         
-        // Seleccionamos los dos posibles lugares donde irán los beats
-        const contenedorDestacados = document.querySelector('.grid-2x2');
-        const contenedorCatalogo = document.getElementById('catalogo-container');
+        // Seleccionamos los dos lugares del HTML
+        const contenedorDestacados = document.querySelector('.grid-2x2'); // Sección de arriba
+        const contenedorCatalogo = document.getElementById('catalogo-container'); // Sección de abajo
 
-        // Limpiamos contenido previo si existen los contenedores
+        // Limpiamos los beats que escribiste a mano en el HTML para que no se dupliquen
         if (contenedorDestacados) contenedorDestacados.innerHTML = '';
         if (contenedorCatalogo) contenedorCatalogo.innerHTML = '';
 
@@ -24,7 +24,6 @@ async function cargarCatalogo() {
             card.setAttribute('data-audio', beat.audio);
             card.setAttribute('data-name', beat.name);
 
-            // Plantilla HTML de la tarjeta
             card.innerHTML = `
                 <div class="image-container">
                     <img src="${beat.image}" alt="${beat.name}" class="beat-cover">
@@ -40,22 +39,19 @@ async function cargarCatalogo() {
                     <div class="beat-meta"><span>${beat.key}</span> | <span>${beat.bpm} BPM</span></div>
                     <canvas class="waveform-canvas"></canvas>
                     <button class="btn-license">ADQUIRIR LICENCIA</button>
-                </div>
-            `;
+                </div>`;
 
-            // Lógica de clasificación: ¿Va a destacados o al catálogo normal?
+            // CLASIFICACIÓN: Si es featured va arriba, si no, va abajo
             if (beat.featured && contenedorDestacados) {
                 contenedorDestacados.appendChild(card);
             } else if (!beat.featured && contenedorCatalogo) {
                 contenedorCatalogo.appendChild(card);
             }
 
-            // Activamos la lógica (audio, canvas, timeline) para esta tarjeta
             inicializarCard(card);
-        }); // Cierre del forEach
-
+        });
     } catch (error) {
-        console.error("Error cargando el JSON:", error);
+        console.error("Error cargando el catálogo:", error);
     }
 } // Cierre de la función
 // 2. FUNCIÓN PARA ACTIVAR CADA TARJETA CREADA
