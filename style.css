@@ -1,10 +1,11 @@
 /* --- 1. CONFIGURACIÓN BASE --- */
 :root {
-    --bg-color: #050505; /* Fondo casi negro por defecto */
+    --bg-color: #050505;
     --text-color: #ffffff;
-    --accent-color: #ffffff; /* Cambiará dinámicamente con JS */
+    --accent-color: #ffffff; 
     --card-bg: #111111;
     --transition-speed: 0.4s;
+    --max-width: 1200px;
 }
 
 * {
@@ -13,555 +14,503 @@
     box-sizing: border-box;
 }
 
+html { scroll-behavior: smooth; }
+
 body {
-    -webkit-tap-highlight-color: transparent; /* Quita el cuadro azul en móviles */
-    user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-user-select: none;
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: 'Inter', sans-serif; /* Fuente moderna y limpia */
-    overflow-x: hidden; /* Evita scroll horizontal global */
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
     transition: background-color var(--transition-speed) ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* --- 2. LOADER --- */
+/* --- 2. LOADER CINEMÁTICO --- */
+/* --- 2. LOADER (PANTALLA COMPLETA) --- */
 .loader {
     position: fixed;
     inset: 0;
     background: #000;
-    z-index: 9999;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.5s ease;
+    z-index: 999999;
+    cursor: pointer;
+    transition: opacity 0.8s ease;
 }
 
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255,255,255,0.1);
-    border-top-color: var(--text-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.lyrics-fixed-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+.lyric-line {
+    display: block;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    line-height: 0.85; /* Esto las pega una de otra como en tu diseño */
+    opacity: 0;
+    filter: blur(15px);
+    transform: scale(1.2);
+    transition: all 0.3s ease;
+}
 
-/* --- 3. NAVBAR (STICKY) --- */
+/* AQUÍ CONTROLAS EL TAMAÑO DE CADA LÍNEA */
+.line-1 { font-size: clamp(3rem, 12vw, 7rem); }
+.line-2 { font-size: clamp(1.5rem, 6vw, 3.5rem); letter-spacing: 2px; }
+.line-3 { font-size: clamp(2rem, 8vw, 4.5rem); }
+.line-4 { font-size: clamp(5rem, 22vw, 13rem); font-weight: 950; }
+.line-5 { font-size: clamp(1.5rem, 6vw, 3rem); letter-spacing: 8px; }
+
+/* Esta clase la pone el JS cuando el audio llega al tiempo */
+.lyric-line.active {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+}
+
+@keyframes stackIn {
+    to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0) scale(1);
+    }
+}
+
+.lyric-word:first-child {
+    font-size: clamp(3rem, 15vw, 7rem); /* Primera palabra más imponente */
+}
+
+.click-to-start {
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    color: #555;
+    margin-top: 20px;
+    animation: pulseEnter 2s infinite;
+}
+
+/* --- 3. NAVBAR --- */
 .navbar {
     position: sticky;
     top: 0;
     z-index: 1000;
     background: rgba(5, 5, 5, 0.8);
-    backdrop-filter: blur(10px); /* Efecto cristal moderno */
-    padding: 20px;
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.nav-links {
+.nav-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
     display: flex;
-    justify-content: center;
-    gap: 30px;
+    justify-content: space-between;
+    align-items: center;
 }
+
+.nav-links { display: flex; gap: 30px; }
 
 .nav-links a {
     color: var(--text-color);
     text-decoration: none;
     font-weight: bold;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     letter-spacing: 2px;
-    transition: color var(--transition-speed);
+    transition: 0.3s;
 }
 
-/* --- 4. SECCIÓN BEATS DESTACADOS --- */
-.section-beats-featured {
-    height: calc(100vh - 80px); /* Ajusta para que quepa en una pantalla */
-    display: flex;
-    align-items: center;
-    padding: 20px;
-}
+.nav-logo { height: 30px; width: auto; }
 
-.beat-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columnas fijas */
-    gap: 20px;
+/* --- 4. SECCIONES GENERALES --- */
+.section-title {
     width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
+    text-align: center;
+    padding: 60px 0 10px 0;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
-/* --- 5. BEAT CARD (UNIDAD INDEPENDIENTE) --- */
+.toca-escuchar {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #666;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+}
+
+/* --- 5. BEAT CARDS (SISTEMA COMPACTO PARA MÓVIL) --- */
 .beat-card {
     background: var(--card-bg);
-    padding: 15px;
-    border-radius: 4px;
+    padding: 10px !important; /* Padding reducido para ganar espacio */
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    transition: border-color 0.8s ease, transform 0.3s ease;
-}
-
-.beat-cover {
-    width: 100%;
-    aspect-ratio: 1/1;
-    object-fit: cover;
-    filter: grayscale(20%);
-}
-
-.beat-info h3 {
-    font-size: 1rem;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
-}
-
-.waveform-canvas {
-    width: 100%;
-    height: 60px;
-    background: #1a1a1a;
-    cursor: pointer;
-    border-radius: 2px;
-}
-
-/* --- 6. BOTONES --- */
-.btn-play, .btn-license, .service-btn {
-    width: 100%;
-    padding: 12px;
-    background: #ffffff;
-    color: #000;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    transition: background-color var(--transition-speed);
-}
-
-/* Clase activa (se aplicará con JS) */
-.beat-card.active .btn-license {
-    background-color: var(--accent-color);
-}
-
-/* --- 7. CATÁLOGO (SCROLL HORIZONTAL) --- */
-.section-catalog {
-    padding: 60px 20px;
-    overflow-x: auto; /* Solo scroll en esta sección */
-    white-space: nowrap;
-}
-
-.horizontal-scroll-wrapper {
-    display: inline-flex;
-    gap: 20px;
-}
-
-.horizontal-scroll-wrapper .beat-card {
-    width: 300px; /* Tamaño fijo para el catálogo extenso */
-}
-
-/* --- 8. SERVICIOS --- */
-.section-services {
-    padding: 80px 20px;
-    text-align: center;
-}
-
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    max-width: 1000px;
-    margin: 40px auto;
-}
-
-/* --- 9. RESPONSIVE (MÓVILES) CORREGIDO --- */
-@media (max-width: 768px) {
-    .beat-grid.grid-2x2 {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
-        padding: 10px;
-    }
-
-    /* Ajustamos el tamaño de las tarjetas para que no se desborden */
-    .beat-card {
-        padding: 8px !important;
-        gap: 8px !important;
-    }
-
-    .beat-info h3 {
-        font-size: 0.rem !important; /* Texto más pequeño para que quepa */
-        margin-bottom: 5px !important;
-    }
-
-    .waveform-canvas {
-        height: 35px !important; /* Onda más delgada en móvil */
-    }
-
-    .btn-play, .btn-license {
-        padding: 8px !important;
-        font-size: 0.55rem !important;
-    }
-
-    /* Aseguramos que el título siempre esté arriba */
-    .section-beats-featured {
-        flex-direction: column !important;
-        height: auto !important;
-        padding-top: 40px !important;
-    }
-}
-
-/* --- 10. NUEVA SECCIÓN: SCROLL HORIZONTAL INDEPENDIENTE --- */
-/* Añade esto al final de tu archivo para habilitar el catálogo deslizable */
-
-.section-horizontal {
-    width: 100%;
-    overflow: hidden;
-    padding: 20px 0;
-}
-
-.horizontal-scroll-container {
-    display: flex !important;
-    overflow-x: auto !important; /* Habilita el deslizamiento lateral */
-    gap: 15px;
-    padding: 20px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch; /* Suavidad en iPhone */
-}
-
-/* Estilo para las tarjetas dentro del scroll horizontal */
-.horizontal-scroll-container .beat-card {
-    min-width: 140px !important; 
-    max-width: 140px !important;
-    padding: 10px !important;
-    flex-shrink: 0;
-    scroll-snap-align: center;
-}
-
-.horizontal-scroll-container .beat-info h3 {
-    font-size: 0.65rem !important; /* Texto acorde al tamaño */
-}
-
-/* --- ESTILOS DE SERVICIOS Y TARIFAS --- */
-.services-container {
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.service-category {
-    background: #0a0a0a;
-    padding: 25px;
-    border: 1px solid #1a1a1a;
-    border-radius: 4px;
-    text-align: left;
-}
-
-.service-category h3 {
-    color: var(--accent-color); /* Cambia con el beat */
-    font-size: 0.9rem;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #222;
-    padding-bottom: 10px;
-}
-
-.price-list {
-    list-style: none;
-}
-
-.price-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 0.85rem;
-    color: #888;
-}
-
-.price-list li span {
-    color: #fff;
-    font-weight: bold;
-}
-
-.legal-box {
-    margin-top: 60px;
-    padding: 20px;
-    background: #000;
-    border: 1px dashed #333;
-    font-size: 0.7rem;
-    color: #555;
-    line-height: 1.6;
-}
-/* --- MEJORAS ESTÉTICAS --- */
-:root {
-    --border-radius-main: 15px; /* Bordes más redondeados */
-}
-
-/* Transición suave para los enlaces de la navbar */
-html { scroll-behavior: smooth; }
-
-/* Título de sección */
-.section-title {
-width: 100%;
-    text-align: center;
-    padding: 40px 0 20px 0;
-    font-size: 1.3rem !important; /* Más grande */
-    font-weight: 900 !important; /* Más llena/negrita */
-    letter-spacing: 2px;
-    color: #ffffff !important; /* Forzado a blanco */
-    text-transform: uppercase;
-}
-
-/* Redondear todo */
-.beat-card, .beat-cover, .btn-play, .btn-license, .waveform-canvas, .service-category {
-    border-radius: 8px !important;
-}
-
-/* Borde dinámico al estar activo */
-.beat-card {
-border: 2px solid rgba(255,255,255,0.05) !important; /* Borde base visible pero sutil */
-    transition: border-color 0.4s ease, transform 0.3s ease;
-}
-
-.beat-card.active {
-    border: 2px solid var(--accent-color) !important; /* Forzamos el color dinámico */
-}
-
-/* Color dinámico al botón Play activo */
-.beat-card.active .btn-play {
-    background-color: var(--accent-color) !important;
-    color: #000;
-}
-
-/* Diseño 2x2 y consistencia de tamaño */
-@media (max-width: 768px) {
-    .beat-grid.grid-2x2 {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px;
-    }
-    .beat-card {
-        padding: 10px;
-    }
-    .beat-info h3 { font-size: 0.7rem; }
+    width: 100%; /* Se adapta al grid */
+    min-width: 0; /* Evita que la tarjeta se desborde */
 }
 
 .image-container {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Cuadrado perfecto siempre */
     position: relative;
-    cursor: pointer;
-    overflow: hidden;
     border-radius: 8px;
+    overflow: hidden;
 }
 
-.play-overlay {
-    position: absolute;
-    inset: 0;
-    background: var(--accent-color);
-    opacity: 0;
+.image-container img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Contenedor de Info (Nombre, Meta, Botón) */
+.beat-info {
+    width: 100%;
+    padding: 15px 0 0 0 !important; /* IMPORTANTE: 0 a los lados para ancho total */
     display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.3s ease;
-    z-index: 2;
+    flex-direction: column;
 }
 
-.beat-card.active .play-overlay,
-.image-container:hover .play-overlay {
-    opacity: 0.3; /* Tu 30% de opacidad */
+.beat-info h3 {
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    margin-bottom: 4px !important;
+    letter-spacing: 0.5px;
 }
 
-/* Estilo de los iconos SVG */
-.icon-wrapper svg {
-    width: 50px;
-    height: 50px;
-    fill: white;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transition: opacity 0.3s ease;
-}
-
-/* Control de visibilidad de iconos */
-.icon-pause { opacity: 0; }
-.beat-card.active .icon-play { opacity: 0; }
-.beat-card.active .icon-pause { opacity: 1; }
-
-/* Datos del beat (Key/BPM) */
 .beat-meta {
-    font-size: 0.7rem;
-    color: #888;
-    margin-bottom: 10px;
+    font-size: 0.75rem !important;
+    color: #666 !important;
+    margin-bottom: 12px !important;
+    font-weight: 400;
+    text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-/* Waveform centrada */
-.waveform-canvas {
-    margin: 10px 0;
-    height: 40px !important; /* Ajusta según prefieras */
-}
-
-/* Texto de ayuda debajo del título principal */
-.toca-escuchar {
+/* BOTÓN DE LICENCIA: BLANCO POR DEFECTO, ANCHO TOTAL */
+.btn-license {
+    display: block !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important; /* Texto negro sobre fondo blanco */
+    border: none !important;
+    padding: 16px 0 !important;
+    margin-top: 5px !important;
+    border-radius: 12px !important;
+    font-weight: 900 !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-align: center;
-    font-size: 0.8rem;
-    color: #555;
-    margin-top: -15px;
-    margin-bottom: 30px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
 }
 
-.icon-wrapper {
-    position: relative;
-    width: 50px;
-    height: 50px;
+/* ESTADO ACTIVO: EL BOTÓN SE PINTA PERO EL TEXTO ES BLANCO */
+.beat-card.active .btn-license {
+    background-color: var(--accent-color) !important;
+    color: #ffffff !important; /* TEXTO BLANCO PROTEGIDO */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
-.icon-play, .icon-pause {
+.btn-license:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+/* --- PLAY OVERLAY SIMPLIFICADO --- */
+.play-overlay {
     position: absolute;
-    width: 100%;
-    height: 100%;
-    fill: white;
-    transition: opacity 0.3s ease;
-}
-
-/* Si la card NO está activa, ocultamos pausa */
-.beat-card:not(.active) .icon-pause { opacity: 0; pointer-events: none; }
-.beat-card:not(.active) .icon-play { opacity: 1; }
-
-/* Si la card ESTÁ activa, ocultamos play */
-.beat-card.active .icon-play { opacity: 0; pointer-events: none; }
-.beat-card.active .icon-pause { opacity: 1; }
-
-.toca-escuchar {
-    color: #666;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-}
-
-/* --- NUEVAS CORRECCIONES --- */
-
-/* 1. Evita que el overlay se salga por abajo de la foto */
-.image-container img {
-    display: block;
-    width: 100%;
-}
-
-/* 2. Iconos Play/Pause sólidos y blancos */
-.icon-wrapper svg path {
-    fill: #ffffff !important;
-}
-
-/* 3. Estética de los botones nuevos del final */
-.custom-beats-services {
+    inset: 0;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 15px;
-    padding: 60px 20px;
+    opacity: 0; /* Oculto si no hay interacción */
+    transition: all 0.3s ease;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* Cuando pasamos el mouse (Hover) */
+.image-container:hover .play-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.3); /* Un sombreado suave para ver el play */
+}
+
+/* CUANDO ESTÁ SONANDO (Estado Activo) */
+.beat-card.active .play-overlay {
+    opacity: 1;
+    /* La imagen se tiñe con el color del beat (usando la variable accent-color) al 50% */
+    background: color-mix(in srgb, var(--accent-color) 50%, transparent);
+}
+
+/* Estilo del SVG */
+.icon-wrapper svg {
+    width: 50px; /* Tamaño del icono */
+    height: 50px;
+    fill: #ffffff !important; /* Blanco sólido sin opacidad */
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); /* Sombra para que resalte en imágenes claras */
+}
+
+/* Lógica de cambio Play/Pause */
+.beat-card:not(.active) .icon-pause { display: none; }
+.beat-card.active .icon-play { display: none; }
+.beat-card.active .icon-pause { display: block; }
+
+.beat-card.active .play-overlay, .image-container:hover .play-overlay { opacity: 0.3; }
+
+/* --- 6. SERVICIOS CUSTOM (BOTONES) --- */
+.custom-beats-services {
+    text-align: center;
+    padding: 40px 20px;
 }
 
 .service-btn-custom {
-    background: transparent;
-    color: white;
-    border: 1px solid #333;
-    padding: 18px 30px;
-    border-radius: 8px;
+    background: #111 !important;
+    color: white !important;
+    border: 1px solid #222 !important;
+    padding: 20px 40px !important;
+    border-radius: 12px !important;
     cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: bold;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
     letter-spacing: 2px;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     width: 100%;
-    max-width: 500px;
+    max-width: 450px;
     text-transform: uppercase;
+    margin: 10px auto;
+    display: block;
 }
 
 .service-btn-custom:hover {
-    background: white;
-    color: black;
-    border-color: white;
+    border-color: var(--accent-color) !important;
+    color: var(--accent-color) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
-/* Estilos para el Logo */
-.loader-logo {
-    width: 200px; /* Ajusta el tamaño */
-    animation: pulse 1.5s infinite ease-in-out;
-}
-
-.nav-container {
-    display: flex;
-    justify-content: space-between; /* Empuja logo a izq y links a der */
-    align-items: center;
-    max-width: 100%;       /* Cambiado de 600px a 100% para dar más aire */
-    padding: 0 0.5px;       /* Ajusta este número si quieres que esté más o menos pegado al borde */
-    margin: 0 auto;
-    height: 100%;
-}
-
-.nav-logo {
-    height: 25px; /* Ajusta según tu logo */
-    width: 25px;
-}
-
-@keyframes pulse { 
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.8; }
-}
-
+/* --- 7. SECCIÓN LEGAL --- */
 .section-legal {
-    padding: 80px 20px;
-    max-width: 900px;
+    padding: 60px 20px;
+    max-width: var(--max-width);
     margin: 0 auto;
 }
 
-.legal-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
+.legal-item { margin-bottom: 30px; }
 
 .legal-item h3 {
-    font-size: 0.8rem;
+    font-size: 0.75rem !important;
     letter-spacing: 2px;
     margin-bottom: 15px;
-    color: var(--accent-color);
+    color: var(--accent-color) !important;
     text-transform: uppercase;
+    font-weight: 900;
+    border-left: 3px solid var(--accent-color);
+    padding-left: 10px;
 }
 
 .legal-item p {
-    font-size: 0.85rem;
-    color: #888;
+    font-size: 0.8rem !important;
+    color: #666 !important;
     line-height: 1.6;
-    text-align: justify;
+    text-align: left;
 }
 
-.logo-link {
+/* --- 8. AJUSTES RESPONSIVE INTELIGENTES --- */
+
+/* --- 8. AJUSTES RESPONSIVE INTELIGENTES --- */
+
+/* MÓVIL (Resolución adaptativa para todos los dispositivos) */
+@media (max-width: 768px) {
+    /* Forzamos el 2x2 real sin desbordamiento */
+    .beat-grid, .grid-2x2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; 
+        gap: 10px !important; 
+        padding: 10px !important;
+        width: 100% !important;
+    }
+
+    /* Reducimos la tarjeta al mínimo para que quepa en el grid */
+    .beat-card {
+        padding: 8px !important; 
+        border-radius: 10px !important;
+        gap: 8px !important;
+    }
+
+    /* Ajuste de textos para evitar que el diseño se estire verticalmente */
+    .beat-info h3 {
+        font-size: 0.8rem !important; 
+        line-height: 1.1 !important;
+        margin-bottom: 2px !important;
+    }
+
+    .beat-meta {
+        font-size: 0.6rem !important;
+        margin-bottom: 6px !important;
+        color: #888 !important;
+    }
+
+    /* Botón compacto acorde al tamaño 2x2 */
+    .btn-license {
+        padding: 10px 0 !important;
+        font-size: 0.55rem !important;
+        border-radius: 6px !important;
+        margin-top: auto !important;
+    }
+
+    /* Catálogo inferior: Scroll horizontal compacto */
+    .horizontal-scroll-container {
+        display: flex !important;
+        gap: 10px;
+        padding: 15px 10px;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+
+    .horizontal-scroll-container .beat-card {
+        min-width: 150px !important; 
+        flex: 0 0 150px !important;
+        scroll-snap-align: start;
+    }
+
+    .waveform-canvas {
+        width: 100%;
+        height: 30px;
+        background: #00000000;
+        border-radius: 5px;
+        margin: 5px 0 15px 0 !important; 
+    }
+} /* <--- CIERRE CORRECTO DE MÓVIL */
+
+/* ESCRITORIO (PC y Tablets) */
+@media (min-width: 769px) {
+    .beat-grid, .grid-2x2 {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important; 
+        gap: 25px;
+        max-width: var(--max-width);
+        margin: 0 auto;
+    }
+
+    .horizontal-scroll-container {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        max-width: var(--max-width);
+        margin: 30px auto;
+        gap: 20px;
+    }
+} /* <--- CIERRE DE ESCRITORIO */
+
+/* --- REPRODUCTOR GLOBAL --- */
+.global-player {
+    position: fixed;
+    bottom: -100px; /* Escondido por defecto */
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 2000;
+    transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     align-items: center;
-    text-decoration: none;
-    transition: transform 0.3s ease;
+    padding: 0 20px;
 }
 
-.logo-link:hover {
-    transform: scale(1.05); /* Pequeño efecto al pasar el mouse */
+.global-player.visible { bottom: 0; }
+
+.player-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
 }
 
-.nav-logo {
-    height: 25px; /* Ajustado ligeramente el tamaño */
-    width: auto;  /* Que mantenga la proporción */
-}
+.player-info { display: flex; align-items: center; gap: 15px; }
+.player-cover { width: 55px; height: 55px; border-radius: 4px; object-fit: cover; }
+.player-text h4 { font-size: 0.9rem; margin-bottom: 2px; }
+.player-text p { font-size: 0.7rem; color: #888; }
 
-/* Ajuste para que los links no queden pegados si la pantalla es muy grande */
-.nav-links {
+.player-controls {
     display: flex;
-    gap: 30px;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
+
+.player-main-btn {
+    background: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.player-main-btn svg { width: 20px; height: 20px; fill: black; }
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.progress-bar-bg {
+    flex-grow: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--accent-color); /* Color dinámico del beat */
+    width: 0%;
+    border-radius: 2px;
+}
+
+/* Responsive Móvil */
+@media (max-width: 768px) {
+    .player-content { grid-template-columns: 1fr 1fr; }
+    .player-actions { display: none; } /* Quitamos el botón de compra en player móvil para ahorrar espacio */
+    .player-controls { padding-left: 20px; }
+}
+
+/* Cambia el icono de la barra de blanco a negro según el estado */
+.player-main-btn svg {
+    transition: transform 0.2s ease;
+}
+
+/* Efecto de presión al hacer clic en el botón de la barra */
+/* Feedback visual para el botón de la barra */
+.player-main-btn:active {
+    transform: scale(0.9);
+    background-color: #eee;
+}
+
+/* Mejora la visibilidad del SVG dentro del botón blanco */
+.player-main-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: black !important;
+}
+

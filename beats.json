@@ -8,6 +8,15 @@
     "key": "Am",
     "bpm": "140"
   },
+    {
+    "name": "Clavinet",
+    "color": "#00ff00",
+    "featured": true,
+    "audio": "assets/audio/Clavinet.mp3",
+    "image": "assets/images/asset.webp",
+    "key": "Am",
+    "bpm": "140"
+  },
   {
     "name": "Mirror",
     "featured": true,

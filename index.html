@@ -2,14 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beat Catalog | Prodz</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="is-loading">
 
 <div id="loader" class="loader">
-    <img src="assets/images/Prodz Logo.png" alt="Logo" class="loader-logo">
+    <audio id="tag-audio" src="assets/audio/prodz on the beat hes the goat nice.wav" preload="auto"></audio>
+    <div class="loader-content">
+        <div id="lyrics-container" class="lyrics-fixed-layout">
+            <span class="lyric-line line-1">PRRRODZ</span>
+            <span class="lyric-line line-2">ON THE BEAT</span>
+            <span class="lyric-line line-3">HE'S THE</span>
+            <span class="lyric-line line-4">GOAT</span>
+            <span class="lyric-line line-5">NICE...</span>
+            <span class="click-to-start">TAP TO ENTER</span>
+        </div>
+    </div>
 </div>
 
 <nav class="navbar" id="main-nav">
@@ -53,43 +63,62 @@
         <button class="service-btn-custom" data-msg="Hola! Me gustaría reconstruir un beat.">QUIERO RECONSTRUIR UN BEAT</button>
         <button class="service-btn-custom" data-msg="Hola! Necesito ayuda para editar un audio o un podcast.">QUIERO EDITAR UN AUDIO / PODCAST</button>
     </div>
+<section id="servicios" class="section-pricing">
+    <div class="container-title">
+        <h2 class="section-title">Planes y Licencias</h2>
+    </div>
 
-    <section id="servicios" class="section-services">
-        <h2 class="section-title">TARIFAS DE SERVICIOS</h2>
-        <div class="services-container">
-            <div class="services-grid">
-                <div class="service-category">
-                    <h3>LICENCIAS DE BEATS</h3>
-                    <ul class="price-list">
-                        <li>LICENCIA MP3 <span>15$</span></li>
-                        <li>LICENCIA WAV <span>20$</span></li>
-                        <li>LICENCIA PREMIUM (STEMS) <span>25$</span></li>
-                        <li>LICENCIA FULL PROJECT (FLP) <span>30$</span></li>
-                        <li>LICENCIA EXCLUSIVA <span>50$ (Sujeta a negociación) </span></li>
-                        <li>RECONSTRUCCIÓN DE BEAT <span>(Consultar)</span></li>
-                    </ul>
-                </div>
-
-                <div class="service-category">
-                    <h3>PODCAST Y AUDIO</h3>
-                    <ul class="price-list">
-                        <li>EDICIÓN BÁSICA <span>30$</span></li>
-                        <li>EDICIÓN PREMIUM <span>50$</span></li>
-                    </ul>
-                </div>
-                    
-                <div class="service-category">
-                    <h3>MIX Y MASTER</h3>
-                    <ul class="price-list">
-                        <li>MASTER SINGLE <span>15$</span></li>
-                        <li>MIX & MASTER BÁSICO <span>30$</span></li>
-                        <li>MIX & MASTER AVANZADO <span>60$</span></li>
-                        <li>MELODYNE/AUTOTUNE <span>10$ (Por canción)</span></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div class="pricing-table-container">
+        <table class="pricing-table">
+            <thead>
+                <tr>
+                    <th class="col-feature">Paquete</th>
+                    <th><strong>US$10</strong><br><small>Basic</small></th>
+                    <th><strong>US$20</strong><br><small>Standard</small></th>
+                    <th><strong>US$35</strong><br><small>Premium</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-feature">Archivos separados</td>
+                    <td>✔</td>
+                    <td>✔</td>
+                    <td>✔</td>
+                </tr>
+                <tr>
+                    <td class="col-feature">Audio Master</td>
+                    <td>✔</td>
+                    <td>✔</td>
+                    <td>✔</td>
+                </tr>
+                <tr>
+                    <td class="col-feature">Instrumentos</td>
+                    <td>10</td>
+                    <td>10</td>
+                    <td>ILIM.</td>
+                </tr>
+                <tr>
+                    <td class="col-feature">Revisiones</td>
+                    <td>2</td>
+                    <td>5</td>
+                    <td>ILIM.</td>
+                </tr>
+                <tr>
+                    <td class="col-feature">Entrega</td>
+                    <td>3 días</td>
+                    <td>4 días</td>
+                    <td>10 días</td>
+                </tr>
+                <tr class="row-select">
+                    <td class="col-feature"></td>
+                    <td><button class="btn-select" onclick="window.location.href='#catalogo-container'">Select</button></td>
+                    <td><button class="btn-select" onclick="window.location.href='#catalogo-container'">Select</button></td>
+                    <td><button class="btn-select" onclick="window.location.href='#catalogo-container'">Select</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
 
 
     <section id="legal" class="section-legal">
@@ -130,5 +159,35 @@ o entregados los archivos.</p>
 </main>
 
     <script src="script.js"></script>
+
+<div id="global-player" class="global-player">
+    <div class="player-content">
+        <div class="player-info">
+            <img src="" id="player-img" alt="Cover" class="player-cover">
+            <div class="player-text">
+                <h4 id="player-name">Nombre del Beat</h4>
+                <p id="player-meta">Key | BPM</p>
+            </div>
+        </div>
+
+        <div class="player-controls">
+            <button id="player-play-btn" class="player-main-btn">
+                <svg viewBox="0 0 24 24" class="icon-player-pause"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <div class="progress-container">
+                <span id="current-time">0:00</span>
+                <div class="progress-bar-bg">
+                    <div id="progress-bar-fill" class="progress-fill"></div>
+                </div>
+                <span id="total-duration">0:00</span>
+            </div>
+        </div>
+
+        <div class="player-actions">
+            <button class="btn-license player-buy">ADQUIRIR</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

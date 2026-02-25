@@ -99,11 +99,27 @@ function handlePlayback(audio, card, color) {
         card.style.borderColor = color;
         activeAudio = audio;
         activeCard = card;
+
+        // --- PEGA ESTO AQUÍ: Activa el reproductor global ---
+        const beatData = {
+            name: card.getAttribute('data-name'),
+            image: card.querySelector('img').src,
+            key: card.querySelector('.beat-meta span:first-child').innerText,
+            bpm: card.querySelector('.beat-meta span:last-child').innerText
+        };
+        updateGlobalPlayer(beatData, color);
+        trackTime();
+        // ----------------------------------------------------
+
         updateGlobalTheme(color);
-    } else {
+} else {
         audio.pause();
         card.classList.remove('active');
         card.style.borderColor = "rgba(255,255,255,0.05)";
+        
+        // --- AÑADE ESTA LÍNEA AQUÍ ---
+        // Esto cambia el icono de la barra de abajo a "Play" cuando pausas desde la foto
+        document.getElementById('player-play-btn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
     }
 }
 
@@ -145,25 +161,48 @@ function updateWaveformProgress(canvas, audio, color) {
 
 // 6. TEMA DINÁMICO
 function updateGlobalTheme(color) {
+    // 1. Actualiza la variable para que el botón sepa de qué color rellenarse
     document.documentElement.style.setProperty('--accent-color', color);
+    
+    // 2. Mantiene el resplandor de fondo de la página
     document.body.style.backgroundImage = `radial-gradient(circle at top, ${color}22 0%, #050505 100%)`;
+
+    // 3. Solo pintamos los links de la navegación (CATÁLOGO, SERVICIOS, LEGAL)
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.style.color = color;
         link.style.borderBottom = `2px solid ${color}`;
     });
 }
 
-// 7. LOADER Y WHATSAPP
-window.addEventListener('load', () => {
-    const loader = document.getElementById('loader');
-    setTimeout(() => {
-        loader.style.opacity = '0';
-        setTimeout(() => {
-            loader.style.display = 'none';
-            document.body.classList.remove('is-loading');
-        }, 500);
-    }, 500);
-});
+// REEMPLAZA TODA LA SECCIÓN 7 POR ESTA
+const loader = document.getElementById('loader');
+const tagAudio = document.getElementById('tag-audio');
+
+if (loader) {
+    loader.addEventListener('click', () => {
+        tagAudio.play().then(() => {
+            // Ocultamos el mensaje de "Tap"
+            const tapHint = loader.querySelector('.click-to-start');
+            if(tapHint) tapHint.style.opacity = '0';
+
+            tagAudio.ontimeupdate = () => {
+                const time = tagAudio.currentTime;
+
+                // ACTIVACIÓN POR TIEMPOS (Ajusta los segundos si hace falta)
+                if (time >= 0.0) loader.querySelector('.line-1').classList.add('active');
+                if (time >= 0.4) loader.querySelector('.line-2').classList.add('active');
+                if (time >= 0.9) loader.querySelector('.line-3').classList.add('active');
+                if (time >= 1.2) loader.querySelector('.line-4').classList.add('active');
+                if (time >= 2.0) loader.querySelector('.line-5').classList.add('active');
+            };
+
+            tagAudio.onended = () => {
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; }, 800);
+            };
+        });
+    }, { once: true });
+}
 
 document.addEventListener('click', (e) => {
     const numeroTelefono = "584246603660"; 
@@ -181,3 +220,62 @@ document.addEventListener('click', (e) => {
 
 // LANZAMIENTO INICIAL
 cargarCatalogo();
+
+function updateGlobalPlayer(beat, color) {
+    const player = document.getElementById('global-player');
+    const playBtn = document.getElementById('player-play-btn');
+    
+    // Llenar datos
+    document.getElementById('player-img').src = beat.image;
+    document.getElementById('player-name').innerText = beat.name;
+    document.getElementById('player-meta').innerText = `${beat.key} | ${beat.bpm} BPM`;
+    
+    // Mostrar player
+    player.classList.add('visible');
+    
+    // Actualizar color de la barra
+    document.getElementById('progress-bar-fill').style.backgroundColor = color;
+}
+
+// Lógica de tiempo (conectar con el audio activo)
+function trackTime() {
+    if (!activeAudio) return;
+    
+    const progressFill = document.getElementById('progress-bar-fill');
+    const currentTimeEl = document.getElementById('current-time');
+    const totalTimeEl = document.getElementById('total-duration');
+
+    activeAudio.addEventListener('timeupdate', () => {
+        const percent = (activeAudio.currentTime / activeAudio.duration) * 100;
+        progressFill.style.width = percent + '%';
+        
+        // Formatear minutos/segundos
+        currentTimeEl.innerText = formatTime(activeAudio.currentTime);
+        if(!isNaN(activeAudio.duration)) {
+            totalTimeEl.innerText = formatTime(activeAudio.duration);
+        }
+    });
+}
+
+function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+// CONTROL DEL BOTÓN PLAY/PAUSE DE LA BARRA GLOBAL
+document.getElementById('player-play-btn').addEventListener('click', function() {
+    if (!activeAudio) return; 
+
+    if (activeAudio.paused) {
+        activeAudio.play();
+        if (activeCard) activeCard.classList.add('active');
+        // Pone icono de PAUSA
+        this.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+    } else {
+        activeAudio.pause();
+        if (activeCard) activeCard.classList.remove('active');
+        // Pone icono de PLAY
+        this.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+    }
+});
