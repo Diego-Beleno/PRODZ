@@ -37,6 +37,14 @@ body {
     z-index: 999999;
     cursor: pointer;
     transition: opacity 0.8s ease;
+    /* BLOQUEO DE SELECCIÓN DE TEXTO */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE10+/Edge */
+    user-select: none;         /* Estándar (Chrome, Opera, etc.) */
+    
+    /* Evita el menú contextual (clic derecho) en móviles */
+    -webkit-touch-callout: none;
 }
 
 /* --- AJUSTE DE LA CAJA IMAGINARIA --- */
