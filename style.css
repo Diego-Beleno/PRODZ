@@ -39,33 +39,44 @@ body {
     transition: opacity 0.8s ease;
 }
 
+/* --- AJUSTE DE LA CAJA IMAGINARIA --- */
 .lyrics-fixed-layout {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     text-align: center;
+    /* Esta es la caja imaginaria */
+    width: 90%; 
+    max-width: 600px; /* Limita el ancho para que se vea como un bloque cuadrado */
+    margin: 0 auto;
+    gap: 0; /* Quitamos el espacio para controlar el pegado con line-height */
 }
 
 .lyric-line {
     display: block;
-    font-weight: 900;
+    width: 100%; /* Obliga a la línea a reconocer el ancho de la caja */
+    font-weight: 950; /* Más peso para que se vea más sólido */
     color: #fff;
     text-transform: uppercase;
-    line-height: 0.85; /* Esto las pega una de otra como en tu diseño */
+    line-height: 0.8; /* Súper pegadas para el efecto bloque */
     opacity: 0;
     filter: blur(15px);
-    transform: scale(1.2);
+    transform: scale(1.1);
     transition: all 0.3s ease;
+    
+    /* Evita que las letras se desborden si el nombre es muy largo */
+    white-space: nowrap; 
 }
 
-/* AQUÍ CONTROLAS EL TAMAÑO DE CADA LÍNEA */
-.line-1 { font-size: clamp(3rem, 12vw, 7rem); }
-.line-2 { font-size: clamp(1.5rem, 6vw, 3.5rem); letter-spacing: 2px; }
-.line-3 { font-size: clamp(2rem, 8vw, 4.5rem); }
-.line-4 { font-size: clamp(5rem, 22vw, 13rem); font-weight: 950; }
-.line-5 { font-size: clamp(1.5rem, 6vw, 3rem); letter-spacing: 8px; }
+/* --- AJUSTE DE TAMAÑOS PARA "CUADRAR" EL BLOQUE --- */
+/* Ajusta estos % si ves que una línea queda más corta que otra */
+.line-1 { font-size: clamp(2.5rem, 12vw, 6rem); letter-spacing: -1px; }
+.line-2 { font-size: clamp(1.2rem, 5.5vw, 2.8rem); letter-spacing: 4px; }
+.line-3 { font-size: clamp(1.8rem, 8vw, 4rem); letter-spacing: 1px; }
+.line-4 { font-size: clamp(5rem, 25vw, 14rem); letter-spacing: -6px; margin: -10px 0; }
+.line-5 { font-size: clamp(1.2rem, 5vw, 2.5rem); letter-spacing: 12px; }
 
-/* Esta clase la pone el JS cuando el audio llega al tiempo */
 .lyric-line.active {
     opacity: 1;
     filter: blur(0);
