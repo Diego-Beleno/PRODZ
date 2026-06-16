@@ -68,16 +68,16 @@
 
         <ul class="admin-menu">
             <li class="admin-menu-item active" id="tab-btn-bookings">
-                <button onclick="switchTab('bookings')"><span>🎙️</span> Reservas</button>
+                <button onclick="switchTab('bookings')">Reservas</button>
             </li>
             <li class="admin-menu-item" id="tab-btn-weekly-slots">
-                <button onclick="switchTab('weekly-slots')"><span>📅</span> Horarios</button>
+                <button onclick="switchTab('weekly-slots')">Horarios</button>
             </li>
             <li class="admin-menu-item" id="tab-btn-blocked-dates">
-                <button onclick="switchTab('blocked-dates')"><span>🚫</span> Bloqueos</button>
+                <button onclick="switchTab('blocked-dates')">Bloqueos</button>
             </li>
             <li class="admin-menu-item" id="tab-btn-beats">
-                <button onclick="switchTab('beats')"><span>🎵</span> Catálogo Beats</button>
+                <button onclick="switchTab('beats')">Beats</button>
             </li>
         </ul>
 
@@ -211,7 +211,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="bd-motivo">Motivo</label>
-                            <input type="text" id="bd-motivo" class="form-input" placeholder="Ej. Feriado">
+                            <input type="text" id="bd-motivo" class="form-input">
                         </div>
                         <div id="bd-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
                         <button type="submit" class="booking-action-btn">Crear Bloqueo</button>
@@ -234,67 +234,66 @@
                     <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Agregar Beat</h3>
                     <form id="beats-form">
                         <div class="form-group">
-                            <label class="form-label" for="beat-titulo">Título</label>
-                            <input type="text" id="beat-titulo" class="form-input" required placeholder="Ej. Night Trap">
+                            <label class="form-label" for="beat-titulo">Titulo</label>
+                            <input type="text" id="beat-titulo" class="form-input" required>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
                             <div class="form-group">
                                 <label class="form-label" for="beat-bpm">BPM</label>
-                                <input type="number" id="beat-bpm" class="form-input" required placeholder="140" min="60" max="250">
+                                <input type="number" id="beat-bpm" class="form-input" required min="60" max="250">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="beat-escala">Escala</label>
-                                <input type="text" id="beat-escala" class="form-input" required placeholder="Am">
+                                <input type="text" id="beat-escala" class="form-input">
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="beat-precio">Precio (USD)</label>
-                            <input type="number" id="beat-precio" class="form-input" required placeholder="20.00" step="0.01" min="0">
-                        </div>
-
-                        <!-- Drop zone: imagen (se convierte a WebP) -->
-                        <div class="form-group">
-                            <label class="form-label">Portada (opcional, se convierte a WebP)</label>
-                            <div class="drop-zone" id="image-drop-zone">
-                                <div class="dz-placeholder">
-                                    <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                                    <div>Suelta una imagen aquí o haz clic para seleccionar</div>
-                                    <div style="font-size:0.65rem;color:#444;margin-top:6px;">JPG, PNG, WebP → se convertirá a WebP</div>
-                                </div>
-                                <div class="dz-preview">
-                                    <img id="image-preview-img" src="" alt="preview">
-                                    <div class="dz-name" id="image-preview-name"></div>
-                                </div>
-                                <input type="file" id="beat-image-input" accept="image/*" style="display:none">
+                            <div class="form-group">
+                                <label class="form-label" for="beat-precio">Precio $</label>
+                                <input type="number" step="0.01" id="beat-precio" class="form-input" required>
                             </div>
-                            <div class="drop-zone-error" id="image-error"></div>
-                            <input type="hidden" id="beat-color" value="#ffffff">
                         </div>
 
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                             <div class="form-group">
-                                <label class="form-label" for="beat-color-picker">Color acento</label>
-                                <input type="color" id="beat-color-picker" class="form-input" value="#ffffff" style="height:48px;padding:4px;">
+                                <label class="form-label">Imagen</label>
+                                <div class="drop-zone" id="image-drop-zone" style="padding:20px;">
+                                    <div class="dz-placeholder">
+                                        <div style="font-size:0.75rem;">Suelta una imagen o haz clic</div>
+                                        <div style="font-size:0.6rem;color:#444;margin-top:4px;">JPG, PNG se convierten a WebP</div>
+                                    </div>
+                                    <div class="dz-preview">
+                                        <img id="image-preview-img" src="" alt="preview" style="max-height:60px;">
+                                    </div>
+                                    <input type="file" id="beat-image-input" accept="image/*" style="display:none">
+                                </div>
+                                <div class="drop-zone-error" id="image-error"></div>
                             </div>
-                            <div class="form-group" style="justify-content:flex-end;">
-                                <label class="form-label" style="margin-top:14px;">
-                                    <input type="checkbox" id="beat-featured" style="margin-right:8px;"> Destacado
-                                </label>
+                            <div style="display:flex;flex-direction:column;gap:12px;justify-content:flex-end;">
+                                <div class="form-group">
+                                    <label class="form-label">Color</label>
+                                    <input type="color" id="beat-color-picker" class="form-input" value="#ffffff" style="height:48px;padding:4px;">
+                                </div>
+                                <div class="toggle-wrap" style="padding:0;">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="beat-featured">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <div>
+                                        <div class="toggle-label">Destacado</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Drop zone: audio -->
                         <div class="form-group">
-                            <label class="form-label">Archivo de Audio (MP3, WAV)</label>
-                            <div class="drop-zone" id="audio-drop-zone">
+                            <label class="form-label">Audio (MP3, WAV)</label>
+                            <div class="drop-zone" id="audio-drop-zone" style="padding:16px 20px;">
                                 <div class="dz-placeholder">
-                                    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-                                    <div>Suelta un audio aquí o haz clic para seleccionar</div>
-                                    <div style="font-size:0.65rem;color:#444;margin-top:6px;">MP3, WAV, AAC, OGG</div>
+                                    <div style="font-size:0.75rem;">Suelta un audio o haz clic</div>
+                                    <div style="font-size:0.6rem;color:#444;margin-top:4px;">MP3, WAV, AAC, OGG</div>
                                 </div>
                                 <div class="dz-preview">
-                                    <div class="dz-name" id="audio-preview-name"></div>
-                                    <div class="dz-size" id="audio-preview-size"></div>
+                                    <div class="dz-name" id="audio-preview-name" style="font-size:0.75rem;"></div>
+                                    <div class="dz-size" id="audio-preview-size" style="font-size:0.65rem;color:#666;"></div>
                                 </div>
                                 <input type="file" id="beat-audio-input" accept="audio/*" style="display:none">
                             </div>
@@ -303,7 +302,7 @@
 
                         <div id="beat-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
                         <div id="beat-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
-                        <button type="submit" class="booking-action-btn">Subir y Agregar</button>
+                        <button type="submit" class="booking-action-btn">Subir Beat</button>
                     </form>
                 </div>
 
@@ -502,6 +501,7 @@ async function cargarBookings() {
                 ${b.estado === 'pendiente' ? `<button class="btn-action approve" onclick="aprobarBooking('${b.id}')">Aprobar</button>` : ''}
                 <button class="btn-action reschedule" onclick="abrirRepro('${b.id}')">Reprog.</button>
                 ${b.estado !== 'cancelada' ? `<button class="btn-action cancel" onclick="cancelarBooking('${b.id}')">Cancelar</button>` : ''}
+                <button class="btn-action cancel" onclick="eliminarBooking(${b.id})" style="background:rgba(255,50,50,0.15);border-color:rgba(255,50,50,0.2);">Eliminar</button>
             </div></td>
         </tr>`;
     }).join('');
@@ -515,6 +515,12 @@ async function aprobarBooking(id) {
 async function cancelarBooking(id) {
     if (!confirm('¿Cancelar esta reserva?')) return;
     const { error } = await supabase.from('bookings').update({ estado: 'cancelada' }).eq('id', id);
+    if (!error) cargarBookings();
+}
+
+async function eliminarBooking(id) {
+    if (!confirm('Eliminar esta reserva permanentemente?')) return;
+    const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (!error) cargarBookings();
 }
 
@@ -592,7 +598,7 @@ $('weekly-slots-form').addEventListener('submit', async (e) => {
     const { error } = await supabase.from('weekly_slots').insert([{ dia_semana: dia, hora_inicio: inicio, hora_fin: fin, duracion_minutos: 60, activo: act }]);
     if (error) { err.textContent = `Error: ${error.message}`; err.style.display = 'block'; return; }
 
-    ok.textContent = `✅ ${DIAS[dia]} guardado.`;
+    ok.textContent = DIAS[dia] + ' guardado.';
     ok.style.display = 'block';
     e.target.reset();
     $('ws-activo').checked = true;
@@ -662,25 +668,98 @@ async function cargarBeatsDB() {
     );
     const list = $('beats-db-list');
     if (!beats || !beats.length) {
-        list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Catálogo vacío. ¡Sube tu primer beat!</div>';
+        list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Catalogo vacio. Sube tu primer beat!</div>';
         return;
     }
     list.innerHTML = beats.map(b =>
-        `<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-            <div>
-                <div style="font-weight:800;font-size:0.85rem;">${b.titulo} ${b.featured ? '⭐' : ''}</div>
-                <div style="font-size:0.75rem;color:#666;margin-top:4px;">${b.escala||'—'} · ${b.bpm||'—'} BPM · $${b.precio||'0'}</div>
-                <div style="font-size:0.65rem;color:#333;margin-top:4px;">${b.vendido ? '🔴 Vendido' : '🟢 Disponible'}</div>
-            </div>
-            <button class="btn-action cancel" onclick="eliminarBeat(${b.id})">Eliminar</button>
-        </div>`
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px 14px;">' +
+            '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;align-items:center;gap:8px;">' +
+                    '<span style="width:10px;height:10px;border-radius:50%;background:' + (b.color || '#fff') + ';flex-shrink:0;"></span>' +
+                    '<span style="font-weight:800;font-size:0.85rem;">' + b.titulo + '</span>' +
+                    (b.featured ? '<span style="font-size:0.55rem;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;color:#888;letter-spacing:1px;">DEST</span>' : '') +
+                    (b.vendido ? '<span style="font-size:0.55rem;background:rgba(255,50,50,0.15);padding:2px 6px;border-radius:4px;color:#ff5555;letter-spacing:1px;">VENDIDO</span>' : '') +
+                '</div>' +
+                '<div style="font-size:0.7rem;color:#666;margin-top:4px;">' + (b.escala || '—') + ' | ' + (b.bpm || '—') + ' BPM | $' + (b.precio || '0') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+                '<button class="btn-action approve" onclick="editarBeat(' + b.id + ')" style="padding:4px 10px;font-size:0.7rem;">Editar</button>' +
+                '<button class="btn-action cancel" onclick="eliminarBeat(' + b.id + ')" style="padding:4px 10px;font-size:0.7rem;">Eliminar</button>' +
+            '</div>' +
+        '</div>'
     ).join('');
 }
 
 async function eliminarBeat(id) {
-    if (!confirm('¿Eliminar beat?')) return;
+    if (!confirm('Eliminar beat?')) return;
     await supabase.from('beats').delete().eq('id', id);
     cargarBeatsDB();
+}
+
+// ── Editor de Beats ────────────────────────────────────
+async function editarBeat(id) {
+    const { data: b } = await supabase.from('beats').select('*').eq('id', id).single();
+    if (!b) return;
+
+    var esc = function(v) { return (v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+    var html = '<form id="beat-edit-form" style="display:flex;flex-direction:column;gap:16px;">';
+    html += '<div class="form-group"><label class="form-label">Titulo</label><input type="text" id="edit-titulo" class="form-input" value="' + esc(b.titulo) + '" required></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">';
+    html += '<div class="form-group"><label class="form-label">BPM</label><input type="number" id="edit-bpm" class="form-input" value="' + esc(b.bpm) + '"></div>';
+    html += '<div class="form-group"><label class="form-label">Escala</label><input type="text" id="edit-escala" class="form-input" value="' + esc(b.escala) + '"></div>';
+    html += '<div class="form-group"><label class="form-label">Precio $</label><input type="number" step="0.01" id="edit-precio" class="form-input" value="' + esc(b.precio) + '"></div>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+    html += '<div class="form-group"><label class="form-label">Color</label><input type="color" id="edit-color" class="form-input" value="' + (b.color||'#ffffff') + '" style="height:48px;padding:4px;"></div>';
+    html += '<div><div class="toggle-wrap" style="padding:0;margin-top:20px;"><label class="toggle"><input type="checkbox" id="edit-featured" ' + (b.featured ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Destacado</div></div></div></div>';
+    html += '</div>';
+    html += '<div class="toggle-wrap" style="padding:0;"><label class="toggle"><input type="checkbox" id="edit-vendido" ' + (b.vendido ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Vendido</div></div></div>';
+    html += '<div id="edit-beat-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div>';
+    html += '<button type="submit" class="booking-action-btn">Guardar Cambios</button>';
+    html += '</form>';
+
+    var modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'edit-beat-modal';
+    var card = document.createElement('div');
+    card.className = 'modal-card';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = function() { modal.remove(); };
+    var title = document.createElement('h3');
+    title.className = 'modal-title';
+    title.textContent = 'Editar: ' + b.titulo;
+    var body = document.createElement('div');
+    body.className = 'modal-body';
+    body.innerHTML = html;
+    card.appendChild(closeBtn);
+    card.appendChild(title);
+    card.appendChild(body);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+
+    modal.querySelector('#edit-beat-form').addEventListener('submit', async function(ev) {
+        ev.preventDefault();
+        var btn = ev.target.querySelector('button[type=submit]');
+        var errEl = document.getElementById('edit-beat-error');
+        btn.textContent = 'Guardando...'; btn.disabled = true; errEl.style.display = 'none';
+        var upd = {
+            titulo: document.getElementById('edit-titulo').value.trim(),
+            bpm: parseInt(document.getElementById('edit-bpm').value) || null,
+            escala: document.getElementById('edit-escala').value.trim(),
+            precio: parseFloat(document.getElementById('edit-precio').value) || 0,
+            color: document.getElementById('edit-color').value,
+            featured: document.getElementById('edit-featured').checked,
+            vendido: document.getElementById('edit-vendido').checked
+        };
+        if (!upd.titulo) { errEl.textContent = 'El titulo es obligatorio'; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
+        var { error } = await supabase.from('beats').update(upd).eq('id', id);
+        if (error) { errEl.textContent = 'Error: ' + error.message; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
+        modal.remove();
+        cargarBeatsDB();
+    });
 }
 
 const imageDrop = setupDropZone('image-drop-zone', 'beat-image-input', {
@@ -688,7 +767,7 @@ const imageDrop = setupDropZone('image-drop-zone', 'beat-image-input', {
     maxSize: 10 * 1024 * 1024,
     onFile: (file) => {
         const reader = new FileReader();
-        reader.onload = (e) => { $('image-preview-img').src = e.target.result; $('image-preview-name').textContent = file.name; };
+        reader.onload = (e) => { $('image-preview-img').src = e.target.result; };
         reader.readAsDataURL(file);
     }
 });
@@ -749,7 +828,7 @@ $('beats-form').addEventListener('submit', async (e) => {
         }]);
         if (dbErr) throw new Error('Error en DB: ' + dbErr.message);
 
-        ok.textContent = `✅ "${titulo}" subido y publicado.`;
+        ok.textContent = '"' + titulo + '" subido y publicado.';
         ok.style.display = 'block';
         e.target.reset();
         $('beat-color-picker').value = '#ffffff';

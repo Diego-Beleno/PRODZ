@@ -137,7 +137,7 @@ body {
     align-items: center;
 }
 
-.nav-links { display: flex; gap: 30px; }
+.nav-links { display: flex; gap: 30px; align-items: center; }
 
 .nav-links a {
     color: var(--text-color);
@@ -146,6 +146,7 @@ body {
     font-size: 0.75rem;
     letter-spacing: 2px;
     transition: 0.3s;
+    white-space: nowrap;
 }
 
 .nav-logo { height: 30px; width: auto; }
@@ -553,8 +554,8 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 24px;
-    backdrop-filter: blur(10px);
     margin-bottom: 30px;
+    transition: border-color 0.4s ease;
 }
 
 .calendar-header {
@@ -588,9 +589,9 @@ body {
 }
 
 .calendar-btn:hover {
-    background: white;
+    background: var(--accent-color);
     color: black;
-    border-color: white;
+    border-color: var(--accent-color);
 }
 
 .calendar-grid {
@@ -645,10 +646,8 @@ body {
 
 .calendar-day.selected {
     background: var(--accent-color) !important;
-    color: #000 !important;
+    color: black !important;
     font-weight: 900;
-    box-shadow: 0 0 20px rgba(255,255,255,0.15);
-    transform: scale(1.05);
     border-color: var(--accent-color);
 }
 
@@ -721,9 +720,9 @@ body {
 }
 
 .slot-chip.selected {
-    background: white !important;
+    background: var(--accent-color) !important;
     color: black !important;
-    border-color: white;
+    border-color: var(--accent-color);
     box-shadow: 0 4px 20px rgba(255,255,255,0.15);
     transform: translateY(-2px);
 }
@@ -760,6 +759,13 @@ body {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+.calendar-btn:hover,
+.booking-action-btn:hover {
+    background: var(--accent-color);
+    color: black;
+    border-color: var(--accent-color);
 }
 
 /* Modales */
@@ -1296,10 +1302,17 @@ input[type="time"]::-webkit-datetime-edit {
 /* ── MOBILE FIRST RESPONSIVE ─────────────────────────── */
 @media (max-width: 768px) {
     /* Navbar */
-    .navbar { padding: 12px 16px; }
-    .nav-links { gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
-    .nav-links a { font-size: 0.65rem; letter-spacing: 1px; }
-    .nav-logo { height: 24px; }
+    .navbar { padding: 10px 12px; }
+    .nav-container { gap: 8px; }
+    .nav-links {
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .nav-links a { font-size: 0.6rem; letter-spacing: 0.5px; padding: 4px 6px; }
+    .nav-logo { height: 20px; }
+    .user-nav-btn { font-size: 0.55rem !important; padding: 4px 8px !important; letter-spacing: 0.5px !important; }
+    .user-nav-name { font-size: 0.55rem !important; }
 
     /* Sections */
     .section-title { font-size: 1.2rem; padding: 40px 16px 10px; letter-spacing: 2px; }
@@ -1321,6 +1334,14 @@ input[type="time"]::-webkit-datetime-edit {
     .calendar-day-name { font-size: 0.65rem; }
     .slots-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
     .slot-chip { padding: 10px; font-size: 0.75rem; }
+
+    /* Slots en mobile */
+    .slots-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    .slot-chip { padding: 14px 10px; font-size: 0.85rem; white-space: nowrap; }
+
+    /* Modal en mobile */
+    .modal-card { padding: 24px 20px; }
+    .modal-title { font-size: 0.95rem; }
 
     /* Global player */
     .global-player { height: 80px; padding: 0 12px; }
@@ -1410,6 +1431,10 @@ input[type="time"]::-webkit-datetime-edit {
     .btn-license { font-size: 0.5rem !important; padding: 8px 0 !important; }
     .horizontal-scroll-container .beat-card { min-width: 130px !important; flex: 0 0 130px !important; }
     .auth-card { padding: 24px 16px; }
+    .nav-links a { font-size: 0.5rem; padding: 3px 4px; }
+    .nav-links { gap: 4px; }
+    .nav-logo { height: 18px; }
+    .user-nav-btn { font-size: 0.5rem !important; padding: 3px 6px !important; }
 }
 
 

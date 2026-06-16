@@ -368,7 +368,7 @@ async function checkPendingBooking() {
     selectedHora = hora;
     selectedHoraFin = hora_fin;
     // Scroll al calendario y abrir modal
-    setTimeout(() => abrirModalConfirmacion(), 800);
+    setTimeout(async () => await abrirModalConfirmacion(), 800);
 }
 
 // ── Calendario ───────────────────────────────────────────────
@@ -476,7 +476,7 @@ async function obtenerHorasDisponibles(fechaSeleccionada) {
         const [slotsRes, bloqueosRes, ocupadasRes] = await Promise.all([
             supabase.from('weekly_slots').select('*').eq('dia_semana', diaSemana).eq('activo', true),
             supabase.from('blocked_dates').select('*').eq('fecha', fechaSeleccionada),
-            supabase.from('bookings').select('hora_inicio').eq('fecha', fechaSeleccionada).neq('estado', 'cancelada')
+            supabase.from('bookings').select('hora_inicio').eq('fecha', fechaSeleccionada).in('estado', ['aprobada','reprogramada'])
         ]);
 
         const slots = slotsRes.data || [];
@@ -588,17 +588,33 @@ document.getElementById('schedule-session-btn')?.addEventListener('click', async
 });
 
 // ── Modal ────────────────────────────────────────────────────
-function abrirModalConfirmacion() {
+async function abrirModalConfirmacion() {
     const modal = document.getElementById('booking-modal');
     const summary = document.getElementById('modal-booking-summary');
-    if (!modal) return;
-    if (selectedDate && summary) {
-        const [yyyy, mm, dd] = selectedDate.split('-');
-        summary.innerHTML = '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Fecha</span><span style="font-weight:800;font-size:0.9rem;">' + dd + '/' + mm + '/' + yyyy + '</span></div>' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Horario</span><span style="font-weight:800;font-size:0.9rem;">' + selectedHora + ' – ' + selectedHoraFin + '</span></div>' +
-            '</div>';
+    if (!modal || !summary) return;
+    if (!selectedDate) return;
+    const [yyyy, mm, dd] = selectedDate.split('-');
+
+    // Obtener datos del perfil si está logueado
+    var nombreArtista = 'Artista';
+    var telefono = '';
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        const perfil = await getPerfilUsuario(session.user.id);
+        if (perfil) {
+            nombreArtista = perfil.nombre + ' ' + (perfil.apellido || '');
+            telefono = perfil.telefono || '';
+        }
     }
+
+    window._bookingNombre = nombreArtista;
+    window._bookingTelefono = telefono;
+
+    summary.innerHTML = '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Fecha</span><span style="font-weight:800;font-size:0.9rem;">' + dd + '/' + mm + '/' + yyyy + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Horario</span><span style="font-weight:800;font-size:0.9rem;">' + selectedHora + ' – ' + selectedHoraFin + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Nombre</span><span style="font-weight:800;font-size:0.9rem;">' + nombreArtista + '</span></div>' +
+        '</div>';
     modal.classList.add('active');
 }
 
@@ -611,14 +627,13 @@ document.getElementById('booking-modal')?.addEventListener('click', (e) => {
 });
 
 // ── Submit: INSERT → WhatsApp ────────────────────────────────
-document.getElementById('booking-confirm-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('button[type=submit]');
+document.getElementById('booking-confirm-btn')?.addEventListener('click', async () => {
+    const submitBtn = document.getElementById('booking-confirm-btn');
     submitBtn.textContent = 'Procesando...';
     submitBtn.disabled = true;
 
-    const artista = document.getElementById('booking-artist-name').value.trim();
-    const telefono = document.getElementById('booking-phone').value.trim();
+    const artista = window._bookingNombre || 'Artista';
+    const telefono = window._bookingTelefono || '';
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'signup.html'; return; }
@@ -644,12 +659,13 @@ document.getElementById('booking-confirm-form')?.addEventListener('submit', asyn
 
     const [yyyy, mm, dd] = selectedDate.split('-');
     const msg = encodeURIComponent(
-        `¡Hola! Acabo de agendar una cita de grabación. Nombre: ${artista}, Teléfono: ${telefono}, Fecha: ${dd}/${mm}/${yyyy}, Horario: ${selectedHora} – ${selectedHoraFin}. Quedo atento a la confirmación.`
+        'Hola, acabo de agendar una cita de grabacion. Nombre: ' + artista + ', Fecha: ' + dd + '/' + mm + '/' + yyyy + ', Horario: ' + selectedHora + ' – ' + selectedHoraFin + '. Quedo atento a la confirmacion.'
     );
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+    window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
 
     document.getElementById('booking-modal')?.classList.remove('active');
-    submitBtn.textContent = '¡Reserva Enviada!';
+    submitBtn.textContent = 'Confirmar y Enviar a WhatsApp';
+    submitBtn.disabled = false;
     resetCalendarState();
     document.querySelectorAll('.calendar-day.selected').forEach(el => el.classList.remove('selected'));
     document.getElementById('slots-container').style.display = 'none';
