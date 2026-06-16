@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beat Catalog | Prodz</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="is-loading">
 
@@ -31,7 +32,9 @@
         <div class="nav-links">
             <a href="#nuevos">CATÁLOGO</a>
             <a href="#servicios">SERVICIOS</a>
+            <a href="#reservas">RESERVAS</a>
             <a href="#legal">LEGAL</a>
+            <div id="auth-widget" class="user-nav-widget"></div>
         </div>
     </div>
 </nav>
@@ -121,6 +124,51 @@
 </section>
 
 
+<section id="reservas" class="booking-section">
+    <div class="container-title">
+        <h2 class="section-title">Reserva tu Sesión</h2>
+        <p class="toca-escuchar">Selecciona una fecha y hora disponible para grabar</p>
+    </div>
+
+    <div class="calendar-wrapper">
+        <div class="calendar-header">
+            <button id="prev-month-btn" class="calendar-btn">&lt;</button>
+            <h3 id="calendar-month-year"></h3>
+            <button id="next-month-btn" class="calendar-btn">&gt;</button>
+        </div>
+        <div class="calendar-grid" id="calendar-days-grid"></div>
+    </div>
+
+    <div class="slots-container" id="slots-container" style="display:none;">
+        <h4 class="slots-title">Horas disponibles — <span id="selected-date-str"></span></h4>
+        <div class="slots-grid" id="slots-grid"></div>
+    </div>
+
+    <button id="schedule-session-btn" class="booking-action-btn" disabled>Agendar Sesión</button>
+</section>
+
+<!-- Modal de Confirmación -->
+<div id="booking-modal" class="modal-overlay">
+    <div class="modal-card">
+        <button id="close-booking-modal" class="modal-close">&times;</button>
+        <h3 class="modal-title">Confirmar Reserva</h3>
+        <div class="modal-body">
+            <div id="modal-booking-summary" style="font-size:0.8rem;color:#666;margin-bottom:20px;letter-spacing:1px;"></div>
+            <form id="booking-confirm-form">
+                <div class="form-group">
+                    <label class="form-label" for="booking-artist-name">Nombre / Nombre Artístico</label>
+                    <input type="text" id="booking-artist-name" class="form-input" required placeholder="Ej. Lil Prodz">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="booking-phone">Número WhatsApp</label>
+                    <input type="tel" id="booking-phone" class="form-input" required placeholder="Ej. +58 424 1234567">
+                </div>
+                <button type="submit" class="booking-action-btn">Confirmar y Enviar a WhatsApp</button>
+            </form>
+        </div>
+    </div>
+</div>
+
     <section id="legal" class="section-legal">
     <div class="container-title">
         <h2 class="section-title">TÉRMINOS Y CONDICIONES</h2>
@@ -158,8 +206,6 @@ o entregados los archivos.</p>
 
 </main>
 
-    <script src="script.js"></script>
-
 <div id="global-player" class="global-player">
     <div class="player-content">
         <div class="player-info">
@@ -188,6 +234,10 @@ o entregados los archivos.</p>
         </div>
     </div>
 </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js"></script>
 
 </body>
 </html>

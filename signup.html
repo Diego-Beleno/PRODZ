@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cuenta | Prodz</title>
+    <meta name="description" content="Crea tu cuenta en Prodz para reservar sesiones de grabación y acceder al catálogo exclusivo.">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="auth-wrapper">
+
+    <!-- Fondo glow dinámico -->
+    <div style="position:fixed;inset:0;background:radial-gradient(circle at 50% 0%,#ffffff18 0%,#050505 70%);pointer-events:none;z-index:0;"></div>
+
+    <div class="auth-card" style="position:relative;z-index:1;">
+        <div class="auth-header">
+            <a href="index.html">
+                <img src="assets/images/Prodz Logo.png" alt="Prodz Logo" class="auth-logo">
+            </a>
+            <h1 class="auth-title">Crear Cuenta</h1>
+            <p style="font-size:0.75rem;color:#555;margin-top:8px;letter-spacing:1px;">Necesitas una cuenta para reservar sesiones</p>
+        </div>
+
+        <form id="signup-form">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group">
+                    <label class="form-label" for="signup-nombre">Nombre</label>
+                    <input type="text" id="signup-nombre" class="form-input" required placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signup-apellido">Apellido</label>
+                    <input type="text" id="signup-apellido" class="form-input" required placeholder="Tu apellido">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="signup-email">Correo Electrónico</label>
+                <input type="email" id="signup-email" class="form-input" required placeholder="tu@correo.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="signup-telefono">Número de Teléfono (WhatsApp)</label>
+                <input type="tel" id="signup-telefono" class="form-input" required placeholder="Ej. +58 424 660 3660">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="signup-password">Contraseña</label>
+                <input type="password" id="signup-password" class="form-input" required placeholder="Mínimo 6 caracteres" minlength="6">
+            </div>
+
+            <div id="signup-error" style="display:none;background:rgba(255,50,50,0.08);border:1px solid rgba(255,50,50,0.2);color:#ff6b6b;font-size:0.78rem;padding:12px 16px;border-radius:10px;margin-bottom:16px;letter-spacing:0.5px;"></div>
+
+            <button type="submit" id="signup-btn" class="booking-action-btn">Crear Cuenta</button>
+        </form>
+
+        <div class="auth-footer">
+            ¿Ya tienes cuenta? <a href="login.html">Inicia sesión aquí</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+(async () => {
+    // Si ya hay sesión activa, redirigir
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        const pending = sessionStorage.getItem('pending_booking');
+        window.location.href = pending ? 'index.html#reservas' : 'index.html';
+        return;
+    }
+})();
+
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn     = document.getElementById('signup-btn');
+    const errBox  = document.getElementById('signup-error');
+    const nombre   = document.getElementById('signup-nombre').value.trim();
+    const apellido = document.getElementById('signup-apellido').value.trim();
+    const telefono = document.getElementById('signup-telefono').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+
+    btn.textContent = 'Creando cuenta...';
+    btn.disabled    = true;
+    errBox.style.display = 'none';
+
+    try {
+        const resultado = await Promise.race([
+            supabase.auth.signUp({
+                email, password,
+                options: { data: { nombre, apellido, telefono } }
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000))
+        ]);
+        const { data, error } = resultado;
+
+        if (error) {
+            errBox.textContent = error.message.toLowerCase().includes('already')
+                ? 'Ya existe una cuenta con ese correo. Inicia sesión.'
+                : `Error: ${error.message}`;
+            errBox.style.display = 'block';
+            btn.textContent = 'Crear Cuenta';
+            btn.disabled = false;
+            return;
+        }
+
+        const pending = sessionStorage.getItem('pending_booking');
+        window.location.href = pending ? 'index.html#reservas' : 'index.html';
+    } catch (err) {
+        console.error('Signup error:', err);
+        errBox.textContent = err.message === 'timeout'
+            ? 'Tiempo de espera agotado. Verifica tu conexión a internet.'
+            : `Error: ${err.message || 'sin conexión'}`;
+        errBox.style.display = 'block';
+        btn.textContent = 'Crear Cuenta';
+        btn.disabled = false;
+    }
+});
+</script>
+</body>
+</html>

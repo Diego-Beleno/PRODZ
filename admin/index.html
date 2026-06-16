@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Prodz</title>
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Error handler global — captura todo y permite copiar -->
+    <script>
+    window.addEventListener('error', function(e) {
+        mostrarError(e.error || e.message || 'Error desconocido');
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        mostrarError(e.reason || 'Promise rechazada');
+    });
+    function mostrarError(err) {
+        var msg = (err && (err.stack || err.message || err.toString())) || 'Error desconocido';
+        var el = document.createElement('div');
+        el.id = 'admin-error-display';
+        el.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999999;display:flex;justify-content:center;align-items:center;padding:40px;"><div style="background:#1a1a1a;border:1px solid #ff4444;border-radius:12px;padding:30px;max-width:600px;width:100%;max-height:80vh;overflow:auto;"><h2 style="color:#ff4444;font-size:1.1rem;margin-bottom:16px;">ERROR</h2><pre style="background:#0a0a0a;padding:16px;border-radius:8px;font-size:0.75rem;color:#ccc;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;">' + msg.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre><div style="display:flex;gap:12px;margin-top:20px;"><button onclick="var t=document.createElement(\'textarea\');t.value=document.querySelector(\'#admin-error-display pre\').textContent;document.body.appendChild(t);t.select();document.execCommand(\'copy\');t.remove();this.textContent=\'Copiado\';" style="flex:1;padding:12px;background:white;color:black;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.8rem;">COPIAR ERROR</button><button onclick="location.reload()" style="flex:1;padding:12px;background:transparent;border:1px solid #444;color:white;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.8rem;">RECARGAR</button></div></div></div>';
+        document.documentElement.appendChild(el);
+    }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <script src="../supabase-config.js"></script>
+
+    <style>
+        .drop-zone {
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.02);
+            position: relative;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--accent-color, #ffffff);
+            background: rgba(255,255,255,0.05);
+        }
+        .drop-zone.has-file {
+            border-color: #4caf50;
+            background: rgba(76,175,80,0.05);
+        }
+        .drop-zone .dz-placeholder { color: #555; font-size: 0.8rem; letter-spacing: 1px; }
+        .drop-zone .dz-placeholder svg { width: 32px; height: 32px; fill: #444; margin-bottom: 10px; }
+        .drop-zone .dz-preview { display: none; margin-top: 10px; }
+        .drop-zone.has-file .dz-placeholder { display: none; }
+        .drop-zone.has-file .dz-preview { display: block; }
+        .dz-preview img { max-height: 80px; border-radius: 6px; }
+        .dz-preview .dz-name { font-size: 0.75rem; color: #4caf50; margin-top: 6px; font-weight: 700; letter-spacing: 0.5px; }
+        .dz-preview .dz-size { font-size: 0.65rem; color: #666; }
+        .drop-zone-error { color: #ff5555; font-size: 0.75rem; margin-top: 6px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout" id="admin-layout">
+
+    <aside class="admin-sidebar">
+        <a href="../index.html" class="admin-logo-link">
+            <img src="../assets/images/Prodz Logo.png" alt="Prodz" style="height:32px;">
+        </a>
+
+        <ul class="admin-menu">
+            <li class="admin-menu-item active" id="tab-btn-bookings">
+                <button onclick="switchTab('bookings')"><span>🎙️</span> Reservas</button>
+            </li>
+            <li class="admin-menu-item" id="tab-btn-weekly-slots">
+                <button onclick="switchTab('weekly-slots')"><span>📅</span> Horarios</button>
+            </li>
+            <li class="admin-menu-item" id="tab-btn-blocked-dates">
+                <button onclick="switchTab('blocked-dates')"><span>🚫</span> Bloqueos</button>
+            </li>
+            <li class="admin-menu-item" id="tab-btn-beats">
+                <button onclick="switchTab('beats')"><span>🎵</span> Catálogo Beats</button>
+            </li>
+        </ul>
+
+        <div style="margin-top:auto;padding-top:30px;border-top:1px solid rgba(255,255,255,0.05);">
+            <button class="admin-logout-btn" id="admin-logout-btn" style="width:100%;">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="admin-content">
+
+        <div class="admin-header-bar">
+            <h1 class="admin-page-title" id="admin-page-title">Reservas</h1>
+            <div class="admin-profile-info">
+                <span class="admin-profile-name" id="admin-profile-name">Cargando...</span>
+                <span class="badge pendiente" style="border-radius:6px;">ADMIN</span>
+            </div>
+        </div>
+
+        <!-- ══ TAB: BOOKINGS ════════════════════════════════ -->
+        <div id="panel-bookings" class="tab-panel active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Pendientes</div>
+                    <div class="stat-value" id="stat-pendientes">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Aprobadas</div>
+                    <div class="stat-value" id="stat-aprobadas">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total</div>
+                    <div class="stat-value" id="stat-total">—</div>
+                </div>
+            </div>
+
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Artista</th><th>Teléfono</th><th>Fecha</th><th>Horario</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="bookings-tbody">
+                        <tr><td colspan="6" style="color:#444;text-align:center;padding:30px;">Cargando reservas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ══ TAB: WEEKLY SLOTS ═══════════════════════════ -->
+        <div id="panel-weekly-slots" class="tab-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:900px;">
+                <div class="calendar-wrapper">
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Nuevo Horario</h3>
+                    <form id="weekly-slots-form">
+                        <div class="form-group">
+                            <label class="form-label" for="ws-dia">Día</label>
+                            <select id="ws-dia" class="form-input" required>
+                                <option value="0">Domingo</option>
+                                <option value="1">Lunes</option>
+                                <option value="2">Martes</option>
+                                <option value="3">Miércoles</option>
+                                <option value="4">Jueves</option>
+                                <option value="5">Viernes</option>
+                                <option value="6">Sábado</option>
+                            </select>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div class="form-group">
+                            <label class="form-label" for="ws-inicio">Inicio</label>
+                            <input type="time" id="ws-inicio" class="form-input" required list="horas-sugeridas">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ws-fin">Fin</label>
+                            <input type="time" id="ws-fin" class="form-input" required list="horas-sugeridas">
+                        </div>
+                    </div>
+                    <datalist id="horas-sugeridas">
+                        <option value="08:00"><option value="09:00"><option value="10:00">
+                        <option value="11:00"><option value="12:00"><option value="13:00">
+                        <option value="14:00"><option value="15:00"><option value="16:00">
+                        <option value="17:00"><option value="18:00"><option value="19:00">
+                        <option value="20:00"><option value="21:00"><option value="00:00">
+                    </datalist>
+                        <div class="toggle-wrap">
+                            <label class="toggle">
+                                <input type="checkbox" id="ws-activo" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <div>
+                                <div class="toggle-label">Activo</div>
+                                <div class="toggle-hint">Desactivar oculta este horario sin borrarlo</div>
+                            </div>
+                        </div>
+                        <div id="ws-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <div id="ws-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <button type="submit" class="booking-action-btn">Guardar Horario</button>
+                    </form>
+                </div>
+                <div>
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Horarios Configurados</h3>
+                    <div id="weekly-slots-list" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="color:#444;font-size:0.8rem;">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ TAB: BLOCKED DATES ═══════════════════════════ -->
+        <div id="panel-blocked-dates" class="tab-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:900px;">
+                <div class="calendar-wrapper">
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Nuevo Bloqueo</h3>
+                    <form id="blocked-dates-form">
+                        <div class="form-group">
+                            <label class="form-label" for="bd-fecha">Fecha</label>
+                            <input type="date" id="bd-fecha" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="bd-todo-dia" style="margin-right:8px;"> Todo el día
+                            </label>
+                        </div>
+                        <div id="bd-horas-wrapper">
+                            <div class="form-group">
+                                <label class="form-label" for="bd-inicio">Inicio</label>
+                                <input type="time" id="bd-inicio" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="bd-fin">Fin</label>
+                                <input type="time" id="bd-fin" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bd-motivo">Motivo</label>
+                            <input type="text" id="bd-motivo" class="form-input" placeholder="Ej. Feriado">
+                        </div>
+                        <div id="bd-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <button type="submit" class="booking-action-btn">Crear Bloqueo</button>
+                    </form>
+                </div>
+                <div>
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Bloqueos Activos</h3>
+                    <div id="blocked-dates-list" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="color:#444;font-size:0.8rem;">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ TAB: BEATS ══════════════════════════════════ -->
+        <div id="panel-beats" class="tab-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:900px;">
+
+                <div class="calendar-wrapper">
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Agregar Beat</h3>
+                    <form id="beats-form">
+                        <div class="form-group">
+                            <label class="form-label" for="beat-titulo">Título</label>
+                            <input type="text" id="beat-titulo" class="form-input" required placeholder="Ej. Night Trap">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                            <div class="form-group">
+                                <label class="form-label" for="beat-bpm">BPM</label>
+                                <input type="number" id="beat-bpm" class="form-input" required placeholder="140" min="60" max="250">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="beat-escala">Escala</label>
+                                <input type="text" id="beat-escala" class="form-input" required placeholder="Am">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="beat-precio">Precio (USD)</label>
+                            <input type="number" id="beat-precio" class="form-input" required placeholder="20.00" step="0.01" min="0">
+                        </div>
+
+                        <!-- Drop zone: imagen (se convierte a WebP) -->
+                        <div class="form-group">
+                            <label class="form-label">Portada (opcional, se convierte a WebP)</label>
+                            <div class="drop-zone" id="image-drop-zone">
+                                <div class="dz-placeholder">
+                                    <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                                    <div>Suelta una imagen aquí o haz clic para seleccionar</div>
+                                    <div style="font-size:0.65rem;color:#444;margin-top:6px;">JPG, PNG, WebP → se convertirá a WebP</div>
+                                </div>
+                                <div class="dz-preview">
+                                    <img id="image-preview-img" src="" alt="preview">
+                                    <div class="dz-name" id="image-preview-name"></div>
+                                </div>
+                                <input type="file" id="beat-image-input" accept="image/*" style="display:none">
+                            </div>
+                            <div class="drop-zone-error" id="image-error"></div>
+                            <input type="hidden" id="beat-color" value="#ffffff">
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                            <div class="form-group">
+                                <label class="form-label" for="beat-color-picker">Color acento</label>
+                                <input type="color" id="beat-color-picker" class="form-input" value="#ffffff" style="height:48px;padding:4px;">
+                            </div>
+                            <div class="form-group" style="justify-content:flex-end;">
+                                <label class="form-label" style="margin-top:14px;">
+                                    <input type="checkbox" id="beat-featured" style="margin-right:8px;"> Destacado
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Drop zone: audio -->
+                        <div class="form-group">
+                            <label class="form-label">Archivo de Audio (MP3, WAV)</label>
+                            <div class="drop-zone" id="audio-drop-zone">
+                                <div class="dz-placeholder">
+                                    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                                    <div>Suelta un audio aquí o haz clic para seleccionar</div>
+                                    <div style="font-size:0.65rem;color:#444;margin-top:6px;">MP3, WAV, AAC, OGG</div>
+                                </div>
+                                <div class="dz-preview">
+                                    <div class="dz-name" id="audio-preview-name"></div>
+                                    <div class="dz-size" id="audio-preview-size"></div>
+                                </div>
+                                <input type="file" id="beat-audio-input" accept="audio/*" style="display:none">
+                            </div>
+                            <div class="drop-zone-error" id="audio-error"></div>
+                        </div>
+
+                        <div id="beat-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <div id="beat-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <button type="submit" class="booking-action-btn">Subir y Agregar</button>
+                    </form>
+                </div>
+
+                <div>
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Beats en Catálogo</h3>
+                    <div id="beats-db-list" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="color:#444;font-size:0.8rem;">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal Reprogramación -->
+<div id="reprog-modal" class="modal-overlay">
+    <div class="modal-card">
+        <button class="modal-close" onclick="document.getElementById('reprog-modal').classList.remove('active')">&times;</button>
+        <h3 class="modal-title">Reprogramar</h3>
+        <div class="modal-body">
+            <form id="reprog-form">
+                <input type="hidden" id="reprog-session-id">
+                <div class="form-group">
+                    <label class="form-label" for="reprog-fecha">Nueva Fecha</label>
+                    <input type="date" id="reprog-fecha" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reprog-hora">Nueva Hora</label>
+                    <select id="reprog-hora" class="form-input" required>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                </div>
+                <button type="submit" class="booking-action-btn">Guardar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ── Utilidades ──────────────────────────────────────── */
+function $(id) { return document.getElementById(id); }
+
+async function safeQuery(queryFn) {
+    try { return await queryFn(); }
+    catch (e) { console.error(e); return { data: null, error: e }; }
+}
+
+const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const WHATSAPP = "584246603660";
+const BEATS_BUCKET = 'beats-bucket';
+
+/* ── WebP conversion ─────────────────────────────────── */
+function fileToWebPBlob(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(blob => {
+                URL.revokeObjectURL(img.src);
+                blob ? resolve(blob) : reject(new Error('Falló conversión WebP'));
+            }, 'image/webp', 0.9);
+        };
+        img.onerror = () => { URL.revokeObjectURL(img.src); reject(new Error('Imagen inválida')); };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+/* ── Drop Zone factory ───────────────────────────────── */
+function setupDropZone(zoneId, inputId, opts = {}) {
+    const zone = $(zoneId);
+    const input = $(inputId);
+    const errorEl = opts.errorEl ? $(opts.errorEl) : null;
+    let currentFile = null;
+
+    function clearError() { if (errorEl) { errorEl.textContent = ''; errorEl.style.display = 'none'; } }
+
+    function setError(msg) { if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; } }
+
+    function acceptFile(file) {
+        clearError();
+        if (opts.maxSize && file.size > opts.maxSize) {
+            setError(`El archivo excede ${opts.maxSize / 1024 / 1024}MB`);
+            return false;
+        }
+        currentFile = file;
+        zone.classList.add('has-file');
+        if (opts.onFile) opts.onFile(file);
+        return true;
+    }
+
+    zone.addEventListener('click', () => input.click());
+
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) acceptFile(files[0]);
+    });
+
+    input.addEventListener('change', () => {
+        if (input.files.length > 0) acceptFile(input.files[0]);
+    });
+
+    return {
+        getFile: () => currentFile,
+        reset: () => {
+            currentFile = null;
+            zone.classList.remove('has-file');
+            input.value = '';
+            clearError();
+        }
+    };
+}
+
+/* ── Inicialización ──────────────────────────────────── */
+async function initAdminPanel() {
+    try {
+        await new Promise(r => setTimeout(r, 300));
+        $('admin-profile-name').textContent = 'Admin';
+
+        await Promise.all([
+            cargarBookings(),
+            cargarWeeklySlots(),
+            cargarBlockedDates(),
+            cargarBeatsDB()
+        ]);
+
+        $('admin-logout-btn').addEventListener('click', () => {
+            window.location.href = '../index.html';
+        });
+
+        $('bd-todo-dia').addEventListener('change', (e) => {
+            $('bd-horas-wrapper').style.display = e.target.checked ? 'none' : 'block';
+        });
+    } catch (err) {
+        console.error('Init error:', err);
+    }
+}
+
+window.addEventListener('load', initAdminPanel);
+
+/* ── Tabs ────────────────────────────────────────────── */
+function switchTab(tab) {
+    ['bookings','weekly-slots','blocked-dates','beats'].forEach(t => {
+        $(`panel-${t}`).classList.toggle('active', t === tab);
+        $(`tab-btn-${t}`).classList.toggle('active', t === tab);
+    });
+    const titles = { bookings:'Reservas', 'weekly-slots':'Horarios Semanales', 'blocked-dates':'Bloqueos', beats:'Catálogo de Beats' };
+    $('admin-page-title').textContent = titles[tab];
+}
+
+/* ── Bookings ────────────────────────────────────────── */
+async function cargarBookings() {
+    const { data: bookings } = await safeQuery(() =>
+        supabase.from('bookings').select('*').order('fecha', { ascending: true })
+    );
+    if (!bookings) return;
+
+    $('stat-pendientes').textContent = bookings.filter(b => b.estado === 'pendiente').length;
+    $('stat-aprobadas').textContent  = bookings.filter(b => b.estado === 'aprobada').length;
+    $('stat-total').textContent      = bookings.length;
+
+    const tbody = $('bookings-tbody');
+    if (!bookings.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#444;text-align:center;padding:30px;">Sin reservas.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = bookings.map(b => {
+        const [yyyy, mm, dd] = b.fecha.split('-');
+        const ini = (b.hora_inicio || '').substring(0,5);
+        const fin = (b.hora_fin || '').substring(0,5);
+        return `<tr>
+            <td><strong>${b.nombre_artista}</strong></td>
+            <td>${b.telefono}</td>
+            <td>${dd}/${mm}/${yyyy}</td>
+            <td>${ini} – ${fin}</td>
+            <td><span class="badge ${b.estado}">${b.estado}</span></td>
+            <td><div class="action-btns">
+                ${b.estado === 'pendiente' ? `<button class="btn-action approve" onclick="aprobarBooking('${b.id}')">Aprobar</button>` : ''}
+                <button class="btn-action reschedule" onclick="abrirRepro('${b.id}')">Reprog.</button>
+                ${b.estado !== 'cancelada' ? `<button class="btn-action cancel" onclick="cancelarBooking('${b.id}')">Cancelar</button>` : ''}
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+async function aprobarBooking(id) {
+    const { error } = await supabase.from('bookings').update({ estado: 'aprobada' }).eq('id', id);
+    if (!error) cargarBookings();
+}
+
+async function cancelarBooking(id) {
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    const { error } = await supabase.from('bookings').update({ estado: 'cancelada' }).eq('id', id);
+    if (!error) cargarBookings();
+}
+
+function abrirRepro(id) {
+    $('reprog-session-id').value = id;
+    $('reprog-modal').classList.add('active');
+}
+
+$('reprog-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = $('reprog-session-id').value;
+    const fecha = $('reprog-fecha').value;
+    const hora = $('reprog-hora').value;
+    const { error } = await supabase.from('bookings').update({ fecha, hora_inicio: hora, estado: 'reprogramada' }).eq('id', id);
+    if (!error) {
+        $('reprog-modal').classList.remove('active');
+        cargarBookings();
+    }
+});
+
+/* ── Weekly Slots ────────────────────────────────────── */
+async function cargarWeeklySlots() {
+    const { data: slots } = await safeQuery(() =>
+        supabase.from('weekly_slots').select('*').order('dia_semana', { ascending: true }).order('hora_inicio', { ascending: true })
+    );
+    const list = $('weekly-slots-list');
+    if (!slots || !slots.length) {
+        list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Sin horarios configurados.</div>';
+        return;
+    }
+    // Agrupar por día
+    var grupos = {};
+    slots.forEach(function(s) {
+        if (!grupos[s.dia_semana]) grupos[s.dia_semana] = [];
+        grupos[s.dia_semana].push(s);
+    });
+    var html = '';
+    for (var d = 0; d < 7; d++) {
+        if (!grupos[d]) continue;
+        html += '<div style="margin-bottom:16px;">';
+        html += '<div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:#888;">' + DIAS[d] + '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+        grupos[d].forEach(function(s) {
+            var activa = s.activo;
+            html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,' + (activa ? '0.02' : '0.01') + ');border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;">';
+            html += '<label class="toggle" style="width:36px;height:20px;flex-shrink:0;">';
+            html += '<input type="checkbox" ' + (activa ? 'checked' : '') + ' onchange="toggleWS(' + s.id + ', this.checked)">';
+            html += '<span class="slider"></span></label>';
+            html += '<span style="background:rgba(255,255,255,0.05);padding:5px 12px;border-radius:5px;font-size:0.8rem;font-weight:700;letter-spacing:1px;white-space:nowrap;flex:1;">' + s.hora_inicio.substring(0,5) + ' – ' + s.hora_fin.substring(0,5) + '</span>';
+            html += '<button class="btn-action cancel" onclick="eliminarWS(' + s.id + ')" style="padding:4px 10px;font-size:0.7rem;">✕</button>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+    }
+    list.innerHTML = html;
+}
+
+async function toggleWS(id, activo) {
+    await supabase.from('weekly_slots').update({ activo }).eq('id', id);
+}
+
+$('weekly-slots-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err  = $('ws-error');
+    const ok   = $('ws-success');
+    const dia = parseInt($('ws-dia').value);
+    const inicio = $('ws-inicio').value;
+    const fin = $('ws-fin').value;
+    const act = $('ws-activo').checked;
+
+    err.style.display = 'none'; ok.style.display = 'none';
+
+    if (inicio >= fin) { err.textContent = 'Inicio debe ser anterior a Fin'; err.style.display = 'block'; return; }
+
+    const { error } = await supabase.from('weekly_slots').insert([{ dia_semana: dia, hora_inicio: inicio, hora_fin: fin, duracion_minutos: 60, activo: act }]);
+    if (error) { err.textContent = `Error: ${error.message}`; err.style.display = 'block'; return; }
+
+    ok.textContent = `✅ ${DIAS[dia]} guardado.`;
+    ok.style.display = 'block';
+    e.target.reset();
+    $('ws-activo').checked = true;
+    cargarWeeklySlots();
+});
+
+async function eliminarWS(id) {
+    if (!confirm('¿Eliminar?')) return;
+    await supabase.from('weekly_slots').delete().eq('id', id);
+    cargarWeeklySlots();
+}
+
+/* ── Blocked Dates ───────────────────────────────────── */
+async function cargarBlockedDates() {
+    const { data: bds } = await safeQuery(() =>
+        supabase.from('blocked_dates').select('*').order('fecha', { ascending: true })
+    );
+    const list = $('blocked-dates-list');
+    if (!bds || !bds.length) {
+        list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Sin bloqueos.</div>';
+        return;
+    }
+    list.innerHTML = bds.map(b => {
+        const [yyyy,mm,dd] = b.fecha.split('-');
+        const rango = b.todo_el_dia ? 'Todo el día' : `${(b.hora_inicio||'').substring(0,5)} – ${(b.hora_fin||'').substring(0,5)}`;
+        return `<div style="background:rgba(255,50,50,0.04);border:1px solid rgba(255,50,50,0.1);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+                <div style="font-weight:800;font-size:0.85rem;">${dd}/${mm}/${yyyy}</div>
+                <div style="font-size:0.75rem;color:#666;margin-top:3px;">${rango}${b.motivo ? ' — '+b.motivo : ''}</div>
+            </div>
+            <button class="btn-action cancel" onclick="eliminarBD(${b.id})">Eliminar</button>
+        </div>`;
+    }).join('');
+}
+
+$('blocked-dates-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err   = $('bd-error');
+    const fecha = $('bd-fecha').value;
+    const todo  = $('bd-todo-dia').checked;
+    const inicio = $('bd-inicio').value;
+    const fin    = $('bd-fin').value;
+    const motivo = $('bd-motivo').value.trim();
+
+    if (!todo && (!inicio || !fin)) {
+        err.textContent = 'Especifica hora o marca "Todo el día"';
+        err.style.display = 'block'; return;
+    }
+    err.style.display = 'none';
+
+    const { error } = await supabase.from('blocked_dates').insert([{ fecha, todo_el_dia: todo, hora_inicio: todo ? null : inicio, hora_fin: todo ? null : fin, motivo: motivo || null }]);
+    if (error) { err.textContent = `Error: ${error.message}`; err.style.display = 'block'; return; }
+    e.target.reset();
+    cargarBlockedDates();
+});
+
+async function eliminarBD(id) {
+    if (!confirm('¿Eliminar?')) return;
+    await supabase.from('blocked_dates').delete().eq('id', id);
+    cargarBlockedDates();
+}
+
+/* ── Beats ────────────────────────────────────────────── */
+async function cargarBeatsDB() {
+    const { data: beats } = await safeQuery(() =>
+        supabase.from('beats').select('*').order('created_at', { ascending: false })
+    );
+    const list = $('beats-db-list');
+    if (!beats || !beats.length) {
+        list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Catálogo vacío. ¡Sube tu primer beat!</div>';
+        return;
+    }
+    list.innerHTML = beats.map(b =>
+        `<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+                <div style="font-weight:800;font-size:0.85rem;">${b.titulo} ${b.featured ? '⭐' : ''}</div>
+                <div style="font-size:0.75rem;color:#666;margin-top:4px;">${b.escala||'—'} · ${b.bpm||'—'} BPM · $${b.precio||'0'}</div>
+                <div style="font-size:0.65rem;color:#333;margin-top:4px;">${b.vendido ? '🔴 Vendido' : '🟢 Disponible'}</div>
+            </div>
+            <button class="btn-action cancel" onclick="eliminarBeat(${b.id})">Eliminar</button>
+        </div>`
+    ).join('');
+}
+
+async function eliminarBeat(id) {
+    if (!confirm('¿Eliminar beat?')) return;
+    await supabase.from('beats').delete().eq('id', id);
+    cargarBeatsDB();
+}
+
+const imageDrop = setupDropZone('image-drop-zone', 'beat-image-input', {
+    errorEl: 'image-error',
+    maxSize: 10 * 1024 * 1024,
+    onFile: (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => { $('image-preview-img').src = e.target.result; $('image-preview-name').textContent = file.name; };
+        reader.readAsDataURL(file);
+    }
+});
+
+const audioDrop = setupDropZone('audio-drop-zone', 'beat-audio-input', {
+    errorEl: 'audio-error',
+    maxSize: 100 * 1024 * 1024,
+    onFile: (file) => {
+        $('audio-preview-name').textContent = file.name;
+        $('audio-preview-size').textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+    }
+});
+
+$('beats-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('beat-error');
+    const ok  = $('beat-success');
+    const btn = e.target.querySelector('button[type=submit]');
+
+    err.style.display = 'none'; ok.style.display = 'none';
+
+    const titulo   = $('beat-titulo').value.trim();
+    const bpm      = parseInt($('beat-bpm').value) || null;
+    const escala   = $('beat-escala').value.trim();
+    const precio   = parseFloat($('beat-precio').value) || 0;
+    const color    = $('beat-color-picker').value;
+    const featured = $('beat-featured').checked;
+
+    const audioFile = audioDrop.getFile();
+    if (!audioFile) { err.textContent = 'Arrastra o selecciona un archivo de audio'; err.style.display = 'block'; return; }
+
+    btn.textContent = 'Subiendo...';
+    btn.disabled = true;
+
+    try {
+        let imageUrl = null;
+
+        // 1. Convertir imagen a WebP y subir
+        const imageFile = imageDrop.getFile();
+        if (imageFile) {
+            const webpBlob = await fileToWebPBlob(imageFile);
+            const imgPath = `public/covers/${Date.now()}_${imageFile.name.replace(/\.[^.]+$/, '')}.webp`;
+            const { error: imgErr } = await supabase.storage.from(BEATS_BUCKET).upload(imgPath, webpBlob, { contentType: 'image/webp', upsert: false });
+            if (imgErr) throw new Error('Error subiendo imagen: ' + imgErr.message);
+            imageUrl = supabase.storage.from(BEATS_BUCKET).getPublicUrl(imgPath).data.publicUrl;
+        }
+
+        // 2. Subir audio
+        const audioPath = `public/audio/${Date.now()}_${audioFile.name}`;
+        const { error: audErr } = await supabase.storage.from(BEATS_BUCKET).upload(audioPath, audioFile, { upsert: false });
+        if (audErr) throw new Error('Error subiendo audio: ' + audErr.message);
+        const audioUrl = supabase.storage.from(BEATS_BUCKET).getPublicUrl(audioPath).data.publicUrl;
+
+        // 3. Insertar en DB
+        const { error: dbErr } = await supabase.from('beats').insert([{
+            titulo, bpm, escala, precio, audio_url: audioUrl,
+            image_url: imageUrl, color, featured
+        }]);
+        if (dbErr) throw new Error('Error en DB: ' + dbErr.message);
+
+        ok.textContent = `✅ "${titulo}" subido y publicado.`;
+        ok.style.display = 'block';
+        e.target.reset();
+        $('beat-color-picker').value = '#ffffff';
+        imageDrop.reset();
+        audioDrop.reset();
+        cargarBeatsDB();
+    } catch (errMsg) {
+        err.textContent = errMsg.message || errMsg;
+        err.style.display = 'block';
+    }
+
+    btn.textContent = 'Subir y Agregar';
+    btn.disabled = false;
+});
+</script>
+
+</body>
+</html>
