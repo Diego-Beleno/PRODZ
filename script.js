@@ -417,7 +417,7 @@ function renderCalendar() {
         if (thisDate < today) {
             dayEl.className = 'calendar-day past';
         } else {
-            dayEl.className = 'calendar-day available';
+            dayEl.className = 'calendar-day available' + (thisDate.getTime() === today.getTime() ? ' today' : '');
             dayEl.dataset.fecha = isoDate;
             dayEl.addEventListener('click', () => onDayClick(dayEl, isoDate));
         }
@@ -594,7 +594,10 @@ function abrirModalConfirmacion() {
     if (!modal) return;
     if (selectedDate && summary) {
         const [yyyy, mm, dd] = selectedDate.split('-');
-        summary.textContent = `📅 ${dd}/${mm}/${yyyy}  —  🕐 ${selectedHora} – ${selectedHoraFin}`;
+        summary.innerHTML = '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Fecha</span><span style="font-weight:800;font-size:0.9rem;">' + dd + '/' + mm + '/' + yyyy + '</span></div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Horario</span><span style="font-weight:800;font-size:0.9rem;">' + selectedHora + ' – ' + selectedHoraFin + '</span></div>' +
+            '</div>';
     }
     modal.classList.add('active');
 }
