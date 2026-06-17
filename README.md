@@ -17,33 +17,37 @@ Plataforma web estática para catálogo de beats musicales y reserva de sesiones
 
 ```
 PRODZ/
-├── index.html               # Landing: catálogo + reproductor + calendario reservas
+├── index.html                # Landing: catálogo + reproductor + calendario reservas + legal
 ├── login.html                # Inicio de sesión
 ├── signup.html               # Registro (nombre, apellido, teléfono, email, password)
-├── admin/index.html          # Panel admin (4 tabs): Reservas, Horarios, Bloqueos, Beats
-├── script.js                 # Lógica principal: catálogo, reproductor, reservas, auth widget
+├── admin/index.html          # Panel admin (869 líneas, JS inline): Reservas, Horarios, Bloqueos, Beats
+├── script.js                 # Lógica principal (677 líneas): catálogo, reproductor, reservas, auth widget
 ├── supabase-config.js        # Cliente Supabase global + helpers (getUsuarioActual, getPerfilUsuario)
-├── style.css                 # Todos los estilos (1161 líneas)
-├── schema.sql                # Esquema SQL completo (tablas, triggers, RLS, funciones)
-├── setup.sql                 # Asignación manual de admin (one-time)
+├── style.css                 # Todos los estilos (1440 líneas)
+├── schema.sql                # Esquema SQL completo (tablas, triggers, RLS, funciones, asignar_admin)
+├── setup.sql                 # Asignación manual de admin (one-time: SELECT asignar_admin('email'))
+├── drop_policies.sql         # Helper para dropear políticas RLS viejas (ej. "Permitir%")
+├── temp_sql.sql              # GRANT EXECUTE ON FUNCTION is_admin TO anon, authenticated
 ├── AGENTS.md                 # Contexto para asistentes AI
 ├── README.md                 # Este archivo
+├── uptades.txt               # Notas personales del usuario (git cheat-sheet)
+├── ver-ip.ps1                # Script PowerShell para obtener IP local
 ├── assets/
-│   ├── audio/                # Archivos de audio locales (loader)
-│   ├── images/               # Logo, portadas, etc.
-│   └── ...
-└── uptades.txt               # Notas personales del usuario (git cheat-sheet)
+│   ├── audio/                # 10 archivos (loader tag + beats)
+│   └── images/               # 10 archivos (logo, portadas WebP, asset por defecto)
 ```
 
 ## Setup Inicial (Supabase)
 
 1. Crea un proyecto en [Supabase](https://supabase.com)
-2. Ve a **SQL Editor** y ejecuta TODO el contenido de `schema.sql`
-3. Ve a **Storage** → crea un bucket público llamado `beats-bucket`
-4. Ve a **Authentication → Settings** y desactiva "Confirm email" (opcional, para auto-login tras registro)
+2. Ve a **SQL Editor** → ejecuta TODO `schema.sql`
+3. Ve a **Storage** → crea bucket público `beats-bucket`
+4. Ve a **Authentication → Settings** → desactiva "Confirm email" (opcional)
 5. Abre `signup.html`, regístrate con tu correo
 6. Ejecuta en SQL Editor: `SELECT public.asignar_admin('tu@correo.com');`
-7. Inicia sesión en `login.html` y ve a `admin/index.html`
+7. Inicia sesión en `login.html` → ve a `admin/index.html`
+
+> Si `asignar_admin()` falla, ejecuta `temp_sql.sql` y luego `setup.sql`.
 
 ## Supabase Tables
 
@@ -91,7 +95,7 @@ PRODZ/
 | fecha | DATE | Día de la sesión |
 | hora_inicio | TIME | Inicio |
 | hora_fin | TIME | Fin |
-| estado | TEXT | `pendiente`, `aprobada`, `cancelada`, `reprogramada` |
+| estado | TEXT | `'pendiente'`, `'aprobada'`, `'cancelada'`, `'reprogramada'` |
 | UNIQUE(fecha, hora_inicio) | | Evita doble reserva |
 
 ### `beats`
@@ -206,11 +210,15 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIs..."
 
 - Idioma: Español (`es`)
 - Número WhatsApp: `+58 424 660 3660` (Venezuela)
-- El loader animado (tag audio + letras) solo aparece en la primera visita
+- El loader animado (tag audio + letras) solo aparece en la primera visita (click/tap)
 - El botón "ADQUIRIR" en pricing y player NO compra realmente — abre WhatsApp
 - `uptades.txt` es personal del usuario, no parte de la app
+- `ver-ip.ps1` es un script auxiliar del usuario, no parte de la app
+- `drop_policies.sql` y `temp_sql.sql` son helpers para mantenimiento de Supabase
+- `style.css` tiene 1440 líneas (no 1161 como decían versiones anteriores)
 - No hay build step: se sirve directamente como archivos estáticos
 - No hay tests ni linter configurados
+- El admin logout en `admin/index.html` redirige al index pero NO cierra sesión (bug conocido)
 
 ## Comandos Útiles
 

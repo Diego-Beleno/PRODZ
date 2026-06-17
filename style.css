@@ -794,7 +794,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     width: 100%;
-    max-width: 440px;
+    max-width: 500px;
     padding: 32px 28px;
     position: relative;
     transform: translateY(20px) scale(0.95);
@@ -841,6 +841,27 @@ body {
 
 .modal-body {
     margin-top: 20px;
+}
+
+/* Responsive grids dentro de modales (editar beat, etc.) */
+.modal-body .form-group {
+    margin-bottom: 14px;
+}
+
+.modal-body [style*="grid-template-columns"] {
+    gap: 10px !important;
+}
+
+@media (max-width: 540px) {
+    .modal-body [style*="grid-template-columns: 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .modal-body [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 /* Formulario Estilos */
