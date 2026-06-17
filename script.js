@@ -6,12 +6,15 @@ function getAudioCtx() {
 let activeAudio = null;
 let activeCard = null;
 
+let todosLosBeats = [];
+
 // 1. FUNCIÓN PARA CARGAR EL CATÁLOGO DESDE SUPABASE DB
 async function cargarCatalogo() {
     try {
         const { data: beats, error } = await supabase
             .from('beats')
             .select('*')
+            .order('orden', { ascending: true, nullsFirst: false })
             .order('created_at', { ascending: false });
 
         if (error || !beats || beats.length === 0) {
@@ -19,20 +22,48 @@ async function cargarCatalogo() {
             return;
         }
 
-        const contenedorDestacados = document.querySelector('.grid-2x2');
-        const contenedorCatalogo = document.getElementById('catalogo-container');
+        todosLosBeats = beats;
+        renderCatalogo(beats);
+        initSearch();
+    } catch (error) {
+        console.error("Error cargando el catálogo:", error);
+    }
+}
 
-        if (contenedorDestacados) contenedorDestacados.innerHTML = '';
-        if (contenedorCatalogo) contenedorCatalogo.innerHTML = '';
+function renderCatalogo(beats) {
+    const contenedorDestacados = document.querySelector('.grid-2x2');
+    const contenedorCatalogo = document.getElementById('catalogo-container');
 
-        beats.forEach(beat => {
-            const card = document.createElement('article');
-            card.className = 'beat-card';
-            card.setAttribute('data-color', beat.color || '#ffffff');
-            card.setAttribute('data-audio', beat.audio_url);
-            card.setAttribute('data-name', beat.titulo);
+    if (contenedorDestacados) contenedorDestacados.innerHTML = '';
+    if (contenedorCatalogo) contenedorCatalogo.innerHTML = '';
 
-            card.innerHTML = `
+    beats.forEach(beat => {
+        const card = document.createElement('article');
+        card.className = 'beat-card';
+        card.setAttribute('data-color', beat.color || '#ffffff');
+        card.setAttribute('data-audio', beat.audio_url);
+        card.setAttribute('data-name', beat.titulo);
+        card.setAttribute('data-genero-search', (beat.genero || '').toLowerCase());
+        card.setAttribute('data-genero', beat.genero || '');
+        card.setAttribute('data-escala', beat.escala || '');
+        card.setAttribute('data-bpm', beat.bpm || '');
+        card.setAttribute('data-vendido', beat.vendido ? 'true' : 'false');
+
+        const metaPartes = [
+            beat.genero,
+            beat.escala,
+            beat.bpm ? beat.bpm + ' BPM' : ''
+        ].filter(Boolean).join(' / ') || '—';
+
+        const precioNum = beat.precio ? parseFloat(beat.precio).toFixed(2).replace(/\.00$/, '') : '';
+        const precioHtml = beat.vendido
+            ? '<span class="beat-price vendido">Vendido</span>'
+            : '<div class="beat-price">Licencia a partir de<strong> ' + precioNum + '$</strong></div>';
+        const btnHtml = beat.vendido
+            ? '<button class="btn-license sold" disabled>NO DISPONIBLE</button>'
+            : '<button class="btn-license">ADQUIRIR LICENCIA</button>';
+
+        card.innerHTML = `
                 <div class="image-container">
                     <img src="${beat.image_url || 'assets/images/asset.webp'}" alt="${beat.titulo}" class="beat-cover">
                     <div class="play-overlay">
@@ -44,22 +75,39 @@ async function cargarCatalogo() {
                 </div>
                 <div class="beat-info">
                     <h3>${beat.titulo}</h3>
-                    <div class="beat-meta"><span>${beat.escala || '—'}</span> | <span>${beat.bpm || '—'} BPM</span></div>
+                    <div class="beat-meta"><span>${metaPartes}</span></div>
+                    ${precioHtml}
                     <canvas class="waveform-canvas"></canvas>
-                    <button class="btn-license">ADQUIRIR LICENCIA</button>
+                    ${btnHtml}
                 </div>`;
 
-            if (beat.featured && contenedorDestacados) {
-                contenedorDestacados.appendChild(card);
-            } else if (!beat.featured && contenedorCatalogo) {
-                contenedorCatalogo.appendChild(card);
-            }
+        if (beat.featured && contenedorDestacados) {
+            contenedorDestacados.appendChild(card);
+        } else if (!beat.featured && contenedorCatalogo) {
+            contenedorCatalogo.appendChild(card);
+        }
 
-            inicializarCard(card);
-        });
-    } catch (error) {
-        console.error("Error cargando el catálogo:", error);
-    }
+        inicializarCard(card);
+    });
+}
+
+function initSearch() {
+    const input = document.getElementById('search-beats');
+    if (!input) return;
+    input.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        if (!q) {
+            renderCatalogo(todosLosBeats);
+            return;
+        }
+        const filtrados = todosLosBeats.filter(b =>
+            (b.titulo && b.titulo.toLowerCase().includes(q)) ||
+            (b.genero && b.genero.toLowerCase().includes(q)) ||
+            (b.escala && b.escala.toLowerCase().includes(q)) ||
+            (b.bpm && b.bpm.toString().includes(q))
+        );
+        renderCatalogo(filtrados);
+    });
 }
 // 2. FUNCIÓN PARA ACTIVAR CADA TARJETA CREADA
 function inicializarCard(card) {
@@ -107,16 +155,17 @@ function handlePlayback(audio, card, color) {
         activeAudio = audio;
         activeCard = card;
 
-        // --- PEGA ESTO AQUÍ: Activa el reproductor global ---
+        // --- Activa el reproductor global ---
         const beatData = {
             name: card.getAttribute('data-name'),
             image: card.querySelector('img').src,
-            key: card.querySelector('.beat-meta span:first-child').innerText,
-            bpm: card.querySelector('.beat-meta span:last-child').innerText
+            key: card.getAttribute('data-escala') || '—',
+            bpm: card.getAttribute('data-bpm') || '—',
+            genero: card.getAttribute('data-genero') || '—'
         };
         updateGlobalPlayer(beatData, color);
         trackTime();
-        // ----------------------------------------------------
+        // --------------------------------------------------
 
         updateGlobalTheme(color);
     } else {
@@ -208,35 +257,42 @@ function updateGlobalTheme(color) {
 const loader = document.getElementById('loader');
 const tagAudio = document.getElementById('tag-audio');
 
+var _introStarted = false;
 if (loader) {
     loader.addEventListener('click', () => {
-        tagAudio.play().then(() => {
-            // Ocultamos el mensaje de "Tap"
-            const tapHint = loader.querySelector('.click-to-start');
-            if (tapHint) tapHint.style.opacity = '0';
+        if (!_introStarted) {
+            // Primer click: iniciar intro
+            _introStarted = true;
+            tagAudio.play().then(() => {
+                const tapHint = loader.querySelector('.click-to-start');
+                if (tapHint) tapHint.style.opacity = '0';
 
-            tagAudio.ontimeupdate = () => {
-                const time = tagAudio.currentTime;
-
-                // ACTIVACIÓN POR TIEMPOS (Ajusta los segundos si hace falta)
-                if (time >= 0.0) loader.querySelector('.line-1').classList.add('active');
-                if (time >= 0.4) loader.querySelector('.line-2').classList.add('active');
-                if (time >= 0.9) loader.querySelector('.line-3').classList.add('active');
-                if (time >= 1.2) loader.querySelector('.line-4').classList.add('active');
-                if (time >= 2.0) loader.querySelector('.line-5').classList.add('active');
-            };
-
-            tagAudio.onended = () => {
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 800);
-            };
-        });
-    }, { once: true });
+                tagAudio.ontimeupdate = () => {
+                    const time = tagAudio.currentTime;
+                    if (time >= 0.0) loader.querySelector('.line-1').classList.add('active');
+                    if (time >= 0.4) loader.querySelector('.line-2').classList.add('active');
+                    if (time >= 0.9) loader.querySelector('.line-3').classList.add('active');
+                    if (time >= 1.2) loader.querySelector('.line-4').classList.add('active');
+                    if (time >= 2.0) loader.querySelector('.line-5').classList.add('active');
+                };
+                tagAudio.onended = () => cerrarIntro();
+            });
+        } else {
+            // Segundo click durante reproducción: saltar intro
+            cerrarIntro();
+        }
+    });
+}
+function cerrarIntro() {
+    tagAudio.pause();
+    tagAudio.currentTime = 0;
+    loader.style.opacity = '0';
+    setTimeout(() => { loader.style.display = 'none'; }, 800);
 }
 
 document.addEventListener('click', (e) => {
     const numeroTelefono = "584246603660";
-    if (e.target.classList.contains('btn-license')) {
+    if (e.target.classList.contains('btn-license') && !e.target.classList.contains('sold')) {
         const card = e.target.closest('.beat-card');
         const nombreBeat = card.getAttribute('data-name');
         const texto = encodeURIComponent(`Hola! Estoy interesado/a en adquirir una licencia para el beat: ${nombreBeat}`);
@@ -258,7 +314,8 @@ function updateGlobalPlayer(beat, color) {
     // Llenar datos
     document.getElementById('player-img').src = beat.image;
     document.getElementById('player-name').innerText = beat.name;
-    document.getElementById('player-meta').innerText = `${beat.key} | ${beat.bpm} BPM`;
+    var playerMeta = [beat.genero, beat.key, beat.bpm + ' BPM'].filter(Boolean).join(' / ');
+    document.getElementById('player-meta').innerText = playerMeta;
 
     // Mostrar player
     player.classList.add('visible');
@@ -301,6 +358,15 @@ function formatTime(seconds) {
     const sec = Math.floor(seconds % 60);
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
 }
+
+// CLIC EN BARRA DE PROGRESO PARA SALTAR
+document.querySelector('.progress-bar-bg').addEventListener('click', function(e) {
+    if (!activeAudio || !activeAudio.duration) return;
+    var rect = this.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var percent = x / rect.width;
+    activeAudio.currentTime = percent * activeAudio.duration;
+});
 
 // CONTROL DEL BOTÓN PLAY/PAUSE DE LA BARRA GLOBAL
 document.getElementById('player-play-btn').addEventListener('click', function () {

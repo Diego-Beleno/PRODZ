@@ -251,14 +251,44 @@
                             <label class="form-label" for="beat-titulo">Titulo</label>
                             <input type="text" id="beat-titulo" class="form-input" required>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
                             <div class="form-group">
                                 <label class="form-label" for="beat-bpm">BPM</label>
                                 <input type="number" id="beat-bpm" class="form-input" required min="60" max="250">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="beat-escala">Escala</label>
-                                <input type="text" id="beat-escala" class="form-input">
+                                <select id="beat-escala" class="form-input">
+                                    <option value="">—</option>
+                                    <option value="C">C</option>
+                                    <option value="Cm">Cm</option>
+                                    <option value="C#">C#</option>
+                                    <option value="C#m">C#m</option>
+                                    <option value="D">D</option>
+                                    <option value="Dm">Dm</option>
+                                    <option value="D#">D#</option>
+                                    <option value="D#m">D#m</option>
+                                    <option value="E">E</option>
+                                    <option value="Em">Em</option>
+                                    <option value="F">F</option>
+                                    <option value="Fm">Fm</option>
+                                    <option value="F#">F#</option>
+                                    <option value="F#m">F#m</option>
+                                    <option value="G">G</option>
+                                    <option value="Gm">Gm</option>
+                                    <option value="G#">G#</option>
+                                    <option value="G#m">G#m</option>
+                                    <option value="A">A</option>
+                                    <option value="Am">Am</option>
+                                    <option value="A#">A#</option>
+                                    <option value="A#m">A#m</option>
+                                    <option value="B">B</option>
+                                    <option value="Bm">Bm</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="beat-genero">Género</label>
+                                <input type="text" id="beat-genero" class="form-input" placeholder="Ej: Trap">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="beat-precio">Precio $</label>
@@ -677,34 +707,131 @@ async function eliminarBD(id) {
     cargarBlockedDates();
 }
 
+function esc(v) { return (v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 /* ── Beats ────────────────────────────────────────────── */
+var _dragBeatId = null;
+var _orderChanged = false;
+
 async function cargarBeatsDB() {
     const { data: beats } = await safeQuery(() =>
-        supabase.from('beats').select('*').order('created_at', { ascending: false })
+        supabase.from('beats').select('*').order('orden', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false })
     );
     const list = $('beats-db-list');
     if (!beats || !beats.length) {
         list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Catalogo vacio. Sube tu primer beat!</div>';
         return;
     }
-    list.innerHTML = beats.map(b =>
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px 14px;">' +
-            '<div style="flex:1;min-width:0;">' +
-                '<div style="display:flex;align-items:center;gap:8px;">' +
-                    '<span style="width:10px;height:10px;border-radius:50%;background:' + (b.color || '#fff') + ';flex-shrink:0;"></span>' +
-                    '<span style="font-weight:800;font-size:0.85rem;">' + b.titulo + '</span>' +
-                    (b.featured ? '<span style="font-size:0.55rem;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;color:#888;letter-spacing:1px;">DEST</span>' : '') +
-                    (b.vendido ? '<span style="font-size:0.55rem;background:rgba(255,50,50,0.15);padding:2px 6px;border-radius:4px;color:#ff5555;letter-spacing:1px;">VENDIDO</span>' : '') +
+
+    function renderBeatItem(b) {
+        var img = b.image_url || '../assets/images/asset.webp';
+        var badges = '';
+        if (b.vendido) badges += '<span style="font-size:0.5rem;background:rgba(255,50,50,0.15);padding:2px 6px;border-radius:4px;color:#ff5555;letter-spacing:1px;">VENDIDO</span>';
+        return '<div draggable="true" class="beat-admin-item" data-beat-id="' + b.id + '" ondragstart="onDragStart(event, \'' + b.id + '\')" ondragover="onDragOver(event)" ondrop="onDrop(event, \'' + b.id + '\')" ondragend="onDragEnd(event)">' +
+            '<div class="beat-admin-drag" title="Arrastrar para reordenar">&#9776;</div>' +
+            '<img src="' + img + '" alt="' + esc(b.titulo) + '" class="beat-admin-cover">' +
+            '<div class="beat-admin-info">' +
+                '<div class="beat-admin-title">' +
+                    '<span class="beat-admin-name">' + esc(b.titulo) + '</span>' +
+                    badges +
                 '</div>' +
-                '<div style="font-size:0.7rem;color:#666;margin-top:4px;">' + (b.escala || '—') + ' | ' + (b.bpm || '—') + ' BPM | $' + (b.precio || '0') + '</div>' +
+                '<div class="beat-admin-meta">' +
+                    '<span>' + (b.genero || '—') + '</span>' +
+                    '<span class="sep">|</span>' +
+                    '<span>' + (b.escala || '—') + '</span>' +
+                    '<span class="sep">|</span>' +
+                    '<span>' + (b.bpm || '—') + ' BPM</span>' +
+                    '<span class="sep">|</span>' +
+                    '<span class="beat-admin-price">$' + (b.precio || '0') + '</span>' +
+                '</div>' +
             '</div>' +
-            '<div style="display:flex;gap:6px;flex-shrink:0;">' +
-                '<button class="btn-action approve" onclick="editarBeat(\'' + b.id + '\')" style="padding:4px 10px;font-size:0.7rem;">Editar</button>' +
-                '<button class="btn-action cancel" onclick="eliminarBeat(\'' + b.id + '\')" style="padding:4px 10px;font-size:0.7rem;">Eliminar</button>' +
+            '<div class="beat-admin-actions">' +
+                '<button class="btn-action approve" onclick="editarBeat(\'' + b.id + '\')">Editar</button>' +
+                '<button class="btn-action cancel" onclick="eliminarBeat(\'' + b.id + '\')">Eliminar</button>' +
             '</div>' +
-        '</div>'
-    ).join('');
+        '</div>';
+    }
+
+    var destacados = beats.filter(function(b){ return b.featured; });
+    var catalogo = beats.filter(function(b){ return !b.featured; });
+    var html = '';
+    html += '<div id="beat-order-actions" style="display:none;margin-bottom:16px;"><button class="booking-action-btn" onclick="guardarOrden()" style="background:#4caf50;border-color:#4caf50;">GUARDAR ORDEN</button><button onclick="cargarBeatsDB()" style="margin-left:10px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:#888;border-radius:8px;padding:12px 20px;font-size:0.75rem;font-weight:700;cursor:pointer;">CANCELAR</button></div>';
+
+    if (destacados.length) {
+        html += '<div class="beat-admin-section-hdr">DESTACADOS</div>';
+        html += '<div class="beat-admin-group" data-group="destacados">' + destacados.map(renderBeatItem).join('') + '</div>';
+        html += '<div class="beat-admin-divider"></div>';
+    }
+    if (catalogo.length) {
+        html += '<div class="beat-admin-section-hdr">CATÁLOGO</div>';
+        html += '<div class="beat-admin-group" data-group="catalogo">' + catalogo.map(renderBeatItem).join('') + '</div>';
+    }
+
+    list.innerHTML = html || '<div style="color:#444;font-size:0.8rem;">Catalogo vacio.</div>';
+    _orderChanged = false;
 }
+
+/* ── Drag & drop reorder (local DOM only) ────────────── */
+function onDragStart(e, id) {
+    _dragBeatId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    e.currentTarget.classList.add('beat-admin-dragging');
+}
+function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    var target = e.currentTarget;
+    if (target.dataset.beatId === _dragBeatId) return;
+    target.classList.add('beat-admin-drop-target');
+}
+function onDragEnd(e) {
+    e.currentTarget.classList.remove('beat-admin-dragging');
+    document.querySelectorAll('.beat-admin-drop-target').forEach(function(el){ el.classList.remove('beat-admin-drop-target'); });
+    _dragBeatId = null;
+}
+function onDrop(e, targetId) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('beat-admin-drop-target');
+    var sourceEl = document.querySelector('.beat-admin-dragging');
+    var targetEl = e.currentTarget;
+    if (!sourceEl || sourceEl === targetEl) return;
+    var parent = sourceEl.parentNode;
+    var siblings = Array.from(parent.children);
+    var sIdx = siblings.indexOf(sourceEl);
+    var tIdx = siblings.indexOf(targetEl);
+    if (sIdx < 0 || tIdx < 0) return;
+    // Reordenar en el DOM
+    if (sIdx < tIdx) {
+        parent.insertBefore(sourceEl, targetEl.nextSibling);
+    } else {
+        parent.insertBefore(sourceEl, targetEl);
+    }
+    // Mostrar botón guardar
+    _orderChanged = true;
+    $('beat-order-actions').style.display = 'block';
+}
+async function guardarOrden() {
+    var items = document.querySelectorAll('#beats-db-list .beat-admin-item');
+    var updates = [];
+    items.forEach(function(el, i) {
+        var id = el.getAttribute('data-beat-id');
+        updates.push({ id: id, orden: i });
+    });
+    for (var u = 0; u < updates.length; u++) {
+        await supabase.from('beats').update({ orden: updates[u].orden }).eq('id', updates[u].id);
+    }
+    // feedback visual
+    var btn = $('beat-order-actions').querySelector('.booking-action-btn');
+    var origText = btn.textContent;
+    btn.textContent = '✓ GUARDADO';
+    setTimeout(function(){
+        btn.textContent = origText;
+        _orderChanged = false;
+        $('beat-order-actions').style.display = 'none';
+    }, 1200);
+}
+
 
 async function eliminarBeat(id) {
     if (!confirm('Eliminar beat?')) return;
@@ -718,19 +845,20 @@ async function editarBeat(id) {
     const { data: b } = await supabase.from('beats').select('*').eq('id', id).single();
     if (!b) return;
 
-    var esc = function(v) { return (v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
-
     var html = '<form id="beat-edit-form" style="display:flex;flex-direction:column;gap:16px;">';
     html += '<div class="form-group"><label class="form-label">Titulo</label><input type="text" id="edit-titulo" class="form-input" value="' + esc(b.titulo) + '" required></div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">';
     html += '<div class="form-group"><label class="form-label">BPM</label><input type="number" id="edit-bpm" class="form-input" value="' + esc(b.bpm) + '"></div>';
-    html += '<div class="form-group"><label class="form-label">Escala</label><input type="text" id="edit-escala" class="form-input" value="' + esc(b.escala) + '"></div>';
+    var escalas = ['','C','Cm','C#','C#m','D','Dm','D#','D#m','E','Em','F','Fm','F#','F#m','G','Gm','G#','G#m','A','Am','A#','A#m','B','Bm'];
+    html += '<div class="form-group"><label class="form-label">Escala</label><select id="edit-escala" class="form-input">' + escalas.map(function(s){return '<option value="' + s + '"' + (b.escala === s ? ' selected' : '') + '>' + (s||'—') + '</option>'}).join('') + '</select></div>';
+    html += '<div class="form-group"><label class="form-label">Género</label><input type="text" id="edit-genero" class="form-input" value="' + esc(b.genero) + '" placeholder="Ej: Trap"></div>';
     html += '<div class="form-group"><label class="form-label">Precio $</label><input type="number" step="0.01" id="edit-precio" class="form-input" value="' + esc(b.precio) + '"></div>';
     html += '</div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
     html += '<div class="form-group"><label class="form-label">Color</label><input type="color" id="edit-color" class="form-input" value="' + (b.color||'#ffffff') + '" style="height:48px;padding:4px;"></div>';
     html += '<div><div class="toggle-wrap" style="padding:0;margin-top:20px;"><label class="toggle"><input type="checkbox" id="edit-featured" ' + (b.featured ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Destacado</div></div></div></div>';
     html += '</div>';
+    html += '<div class="form-group"><label class="form-label">Imagen de portada</label><div id="edit-image-drop-zone" class="drop-zone" style="padding:16px;"><div class="dz-placeholder" style="font-size:0.75rem;">Suelta una imagen o haz clic para cambiarla</div><div class="dz-preview"><img id="edit-image-preview" src="' + esc(b.image_url) + '" style="max-height:80px;border-radius:6px;"></div><input type="file" id="edit-image-input" accept="image/*" style="display:none"></div><div id="edit-image-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div></div>';
     html += '<div class="toggle-wrap" style="padding:0;"><label class="toggle"><input type="checkbox" id="edit-vendido" ' + (b.vendido ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Vendido</div></div></div>';
     html += '<div id="edit-beat-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div>';
     html += '<button type="submit" class="booking-action-btn">Guardar Cambios</button>';
@@ -757,6 +885,25 @@ async function editarBeat(id) {
     modal.appendChild(card);
     document.body.appendChild(modal);
 
+    // Drop zone para imagen en edición
+    var editImageFile = null;
+    var editDropZone = document.getElementById('edit-image-drop-zone');
+    var editImageInput = document.getElementById('edit-image-input');
+    editDropZone.addEventListener('click', function() { editImageInput.click(); });
+    editDropZone.addEventListener('dragover', function(e) { e.preventDefault(); editDropZone.classList.add('drag-over'); });
+    editDropZone.addEventListener('dragleave', function() { editDropZone.classList.remove('drag-over'); });
+    editDropZone.addEventListener('drop', function(e) { e.preventDefault(); editDropZone.classList.remove('drag-over'); if (e.dataTransfer.files.length > 0) handleEditImage(e.dataTransfer.files[0]); });
+    editImageInput.addEventListener('change', function() { if (editImageInput.files.length > 0) handleEditImage(editImageInput.files[0]); });
+    function handleEditImage(file) {
+        if (file.size > 10 * 1024 * 1024) { document.getElementById('edit-image-error').textContent = 'La imagen excede 10MB'; document.getElementById('edit-image-error').style.display = 'block'; return; }
+        document.getElementById('edit-image-error').style.display = 'none';
+        editImageFile = file;
+        var reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('edit-image-preview').src = e.target.result; };
+        reader.readAsDataURL(file);
+        editDropZone.classList.add('has-file');
+    }
+
     modal.querySelector('#beat-edit-form').addEventListener('submit', async function(ev) {
         ev.preventDefault();
         var btn = ev.target.querySelector('button[type=submit]');
@@ -766,12 +913,25 @@ async function editarBeat(id) {
             titulo: document.getElementById('edit-titulo').value.trim(),
             bpm: parseInt(document.getElementById('edit-bpm').value) || null,
             escala: document.getElementById('edit-escala').value.trim(),
+            genero: document.getElementById('edit-genero').value.trim() || null,
             precio: parseFloat(document.getElementById('edit-precio').value) || 0,
             color: document.getElementById('edit-color').value,
             featured: document.getElementById('edit-featured').checked,
             vendido: document.getElementById('edit-vendido').checked
         };
         if (!upd.titulo) { errEl.textContent = 'El titulo es obligatorio'; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
+
+        // Subir nueva imagen si se seleccionó
+        if (editImageFile) {
+            try {
+                var webpBlob = await fileToWebPBlob(editImageFile);
+                var imgPath = 'public/covers/' + Date.now() + '_' + editImageFile.name.replace(/\.[^.]+$/, '') + '.webp';
+                var { error: imgErr } = await supabase.storage.from(BEATS_BUCKET).upload(imgPath, webpBlob, { contentType: 'image/webp', upsert: false });
+                if (imgErr) throw new Error('Error subiendo imagen: ' + imgErr.message);
+                upd.image_url = supabase.storage.from(BEATS_BUCKET).getPublicUrl(imgPath).data.publicUrl;
+            } catch(e) { errEl.textContent = e.message || 'Error al subir imagen'; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
+        }
+
         var { error } = await supabase.from('beats').update(upd).eq('id', id);
         if (error) { errEl.textContent = 'Error: ' + error.message; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
         modal.remove();
@@ -811,6 +971,7 @@ $('beats-form').addEventListener('submit', async (e) => {
     const titulo   = $('beat-titulo').value.trim();
     const bpm      = parseInt($('beat-bpm').value) || null;
     const escala   = $('beat-escala').value.trim();
+    const genero   = $('beat-genero').value.trim() || null;
     const precio   = parseFloat($('beat-precio').value) || 0;
     const color    = $('beat-color-picker').value;
     const featured = $('beat-featured').checked;
@@ -840,10 +1001,14 @@ $('beats-form').addEventListener('submit', async (e) => {
         if (audErr) throw new Error('Error subiendo audio: ' + audErr.message);
         const audioUrl = supabase.storage.from(BEATS_BUCKET).getPublicUrl(audioPath).data.publicUrl;
 
-        // 3. Insertar en DB
+        // 3. Asignar orden (último lugar)
+        var { data: maxOrd } = await supabase.from('beats').select('orden').order('orden', { ascending: false, nullsFirst: false }).limit(1);
+        var orden = (maxOrd && maxOrd.length > 0 ? (maxOrd[0].orden || 0) : -1) + 1;
+
+        // 4. Insertar en DB
         const { error: dbErr } = await supabase.from('beats').insert([{
-            titulo, bpm, escala, precio, audio_url: audioUrl,
-            image_url: imageUrl, color, featured
+            titulo, bpm, escala, genero, precio, audio_url: audioUrl,
+            image_url: imageUrl, color, featured, orden
         }]);
         if (dbErr) throw new Error('Error en DB: ' + dbErr.message);
 

@@ -250,6 +250,82 @@ body {
     transform: translateY(-2px);
 }
 
+/* --- PRECIO EN CARDS --- */
+.beat-price {
+    font-size: 0.65rem;
+    color: #4caf50;
+    letter-spacing: 0.5px;
+    margin: 2px 0 4px;
+    font-weight: 600;
+    transition: color 0.4s ease;
+}
+.beat-price strong {
+    font-weight: 900;
+    font-size: 0.75rem;
+}
+/* Precio usa color de acento cuando el beat está activo */
+.beat-card.active .beat-price {
+    color: var(--accent-color);
+}
+.beat-price.vendido {
+    color: #ff4444;
+    font-weight: 800;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+/* Botón "NO DISPONIBLE" */
+.btn-license.sold {
+    background: rgba(255,255,255,0.05) !important;
+    color: #555 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    pointer-events: none;
+}
+.beat-card.active .btn-license.sold {
+    background: rgba(255,255,255,0.05) !important;
+    color: #555 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* --- BUSCADOR --- */
+.search-bar-container {
+    max-width: var(--max-width);
+    margin: 80px auto 10px;
+    padding: 0 20px;
+}
+.search-bar-wrapper {
+    position: relative;
+    max-width: 480px;
+}
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+.search-input {
+    width: 100%;
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.06);
+    color: white;
+    padding: 14px 16px 14px 44px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    outline: none;
+}
+.search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 20px rgba(255,255,255,0.03);
+}
+.search-input::placeholder {
+    color: #444;
+}
+
 /* --- PLAY OVERLAY SIMPLIFICADO --- */
 .play-overlay {
     position: absolute;
@@ -1047,6 +1123,8 @@ input[type="time"]::-webkit-datetime-edit {
     min-height: 100vh;
     display: flex;
     background: #050505;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 .admin-sidebar {
@@ -1056,6 +1134,7 @@ input[type="time"]::-webkit-datetime-edit {
     display: flex;
     flex-direction: column;
     padding: 30px 20px;
+    box-sizing: border-box;
 }
 
 .admin-logo-link {
@@ -1107,6 +1186,8 @@ input[type="time"]::-webkit-datetime-edit {
     flex-grow: 1;
     padding: 40px;
     overflow-y: auto;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .admin-header-bar {
@@ -1158,10 +1239,18 @@ input[type="time"]::-webkit-datetime-edit {
 /* Tab Content */
 .tab-panel {
     display: none;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .tab-panel.active {
     display: block;
+}
+
+/* Los grids internos del admin no deben desbordar */
+.tab-panel > div {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Grid & Tables in Admin */
@@ -1320,6 +1409,106 @@ input[type="time"]::-webkit-datetime-edit {
     color: black;
 }
 
+/* ── Admin Beat List (drag & drop) ─────────────────────── */
+.beat-admin-item {
+    display: flex;
+    gap: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px;
+    align-items: center;
+    transition: all 0.2s ease;
+    cursor: default;
+    margin-bottom: 8px;
+}
+.beat-admin-item:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+}
+.beat-admin-drag {
+    cursor: grab;
+    color: #555;
+    font-size: 1.1rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+    user-select: none;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.beat-admin-drag:hover { color: #aaa; background: rgba(255,255,255,0.05); }
+.beat-admin-item:active .beat-admin-drag { cursor: grabbing; }
+.beat-admin-cover {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #111;
+}
+.beat-admin-info {
+    flex: 1;
+    min-width: 0;
+}
+.beat-admin-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.beat-admin-name {
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+.beat-admin-meta {
+    font-size: 0.7rem;
+    color: #666;
+    margin-top: 3px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.beat-admin-meta .sep { color: #444; }
+.beat-admin-price {
+    color: #4caf50;
+    font-weight: 700;
+}
+.beat-admin-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.beat-admin-actions .btn-action {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+}
+.beat-admin-section-hdr {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin: 20px 0 10px;
+}
+.beat-admin-divider {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 20px 0;
+}
+.beat-admin-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+/* Drag states */
+.beat-admin-dragging {
+    opacity: 0.3;
+}
+.beat-admin-drop-target {
+    border-color: var(--accent-color, #ffffff) !important;
+    background: rgba(255,255,255,0.06) !important;
+    transform: scale(1.02);
+}
+
 /* ── MOBILE FIRST RESPONSIVE ─────────────────────────── */
 @media (max-width: 768px) {
     /* Navbar */
@@ -1438,6 +1627,26 @@ input[type="time"]::-webkit-datetime-edit {
     .admin-table th,
     .admin-table td { padding: 10px 12px; font-size: 0.75rem; white-space: nowrap; }
 
+    /* Admin forms - hace responsive los grids multi-columna */
+    #panel-beats [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
+    .modal-card [style*="grid-template-columns: 1fr 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    #panel-beats [style*="grid-template-columns: 1fr 1fr"],
+    .modal-card [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    #panel-weekly-slots [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    /* Drop zones en admin panel */
+    .drop-zone { padding: 16px !important; }
+    /* Beats list items - evitar overflow */
+    .beat-admin-item { flex-wrap: wrap; gap: 8px; }
+    .beat-admin-info { flex: 1 1 100%; order: 3; }
+    .beat-admin-actions { margin-left: auto; }
+    .beat-admin-cover { width: 40px; height: 40px; }
+
     /* Admin forms */
     #panel-weekly-slots .form-input,
     #panel-blocked-dates .form-input,
@@ -1456,6 +1665,27 @@ input[type="time"]::-webkit-datetime-edit {
     .nav-links { gap: 4px; }
     .nav-logo { height: 18px; }
     .user-nav-btn { font-size: 0.5rem !important; padding: 3px 6px !important; }
+    .search-bar-container { padding: 0 16px; margin-top: 70px; }
+    .search-input { font-size: 0.8rem; padding: 12px 14px 12px 40px; }
+
+    /* Admin mobile refinements */
+    .stats-grid { gap: 8px; }
+    .stat-card { padding: 12px; }
+    .stat-label { font-size: 0.6rem; letter-spacing: 1px; }
+    .stat-value { font-size: 1.2rem; }
+    #panel-beats [style*="grid-template-columns: 1fr 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    #panel-beats [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    .action-btns { flex-wrap: wrap; gap: 4px; }
+    .btn-action { font-size: 0.65rem; padding: 4px 8px; }
+    /* Reprogram modal select */
+    #reprog-hora { font-size: 16px; }
+    /* Edit modal image drop zone */
+    #edit-image-drop-zone { padding: 12px !important; }
+    #edit-image-drop-zone .dz-preview img { max-height: 60px; }
 }
 
 

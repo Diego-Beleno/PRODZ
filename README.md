@@ -105,6 +105,7 @@ PRODZ/
 | titulo | TEXT | Nombre del beat |
 | bpm | INT | Tempo |
 | escala | TEXT | Tonalidad (ej. Am) |
+| genero | TEXT | Género musical (ej. Trap) |
 | precio | NUMERIC(10,2) | Precio USD |
 | audio_url | TEXT | URL en Storage |
 | image_url | TEXT | URL de portada (WebP) |

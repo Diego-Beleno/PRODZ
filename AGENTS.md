@@ -36,7 +36,7 @@ PRODZ/
 - `weekly_slots`: id, dia_semana (0-6), hora_inicio, hora_fin, duracion_minutos, activo, created_at
 - `blocked_dates`: id, fecha, todo_el_dia, hora_inicio, hora_fin, motivo, created_at
 - `bookings`: id (UUID PK), client_id (FK → profiles), nombre_artista, telefono, fecha, hora_inicio, hora_fin, estado ('pendiente'|'aprobada'|'cancelada'|'reprogramada'), unique(fecha, hora_inicio), created_at
-- `beats`: id, titulo, bpm, escala, precio, audio_url, image_url, color, featured, vendido, created_at
+- `beats`: id, titulo, bpm, escala, genero, precio, audio_url, image_url, color, featured, vendido, created_at
 
 ## Catalog
 - `cargarCatalogo()` in `script.js` fetches from Supabase `beats` table

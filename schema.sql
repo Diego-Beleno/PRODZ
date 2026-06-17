@@ -77,12 +77,14 @@ CREATE TABLE IF NOT EXISTS public.beats (
   titulo TEXT NOT NULL,
   bpm INTEGER,
   escala TEXT,
+  genero TEXT,
   precio NUMERIC(10,2) DEFAULT 0,
   audio_url TEXT NOT NULL,
   image_url TEXT,
   color TEXT DEFAULT '#ffffff',
   featured BOOLEAN DEFAULT false,
   vendido BOOLEAN DEFAULT false,
+  orden INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -205,3 +207,8 @@ $$;
 
 -- Solo se puede ejecutar desde el SQL Editor (no vía REST API)
 REVOKE EXECUTE ON FUNCTION public.asignar_admin FROM anon, authenticated;
+
+-- ══ MIGRATIONS ═══════════════════════════════════════════════════════════
+-- 2026-06-16: Add orden column for manual beat reordering
+-- ALTER TABLE public.beats ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
+-- Luego: UPDATE beats SET orden = sub.rn FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC) - 1 AS rn FROM beats) sub WHERE beats.id = sub.id;
