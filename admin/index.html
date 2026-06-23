@@ -93,6 +93,15 @@
             <li class="admin-menu-item" id="tab-btn-beats">
                 <button onclick="switchTab('beats')">Beats</button>
             </li>
+            <li class="admin-menu-item" id="tab-btn-referrals">
+                <button onclick="switchTab('referrals')">Referidos</button>
+            </li>
+            <li class="admin-menu-item" id="tab-btn-coupons">
+                <button onclick="switchTab('coupons')">Cupones</button>
+            </li>
+            <li class="admin-menu-item" id="tab-btn-config">
+                <button onclick="switchTab('config')">Config</button>
+            </li>
         </ul>
 
         <div style="margin-top:auto;padding-top:30px;border-top:1px solid rgba(255,255,255,0.05);">
@@ -359,6 +368,106 @@
             </div>
         </div>
 
+        <!-- ══ TAB: REFERRALS ══════════════════════════════ -->
+        <div id="panel-referrals" class="tab-panel">
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Referente</th><th>Referido</th><th>Fecha</th><th>Cupón Refte.</th><th>Cupón Refdo.</th></tr>
+                    </thead>
+                    <tbody id="referrals-tbody">
+                        <tr><td colspan="5" style="color:#444;text-align:center;padding:30px;">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ══ TAB: COUPONS ════════════════════════════════ -->
+        <div id="panel-coupons" class="tab-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:1100px;">
+                <div class="calendar-wrapper">
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Crear Cupón</h3>
+                    <form id="coupon-form">
+                        <div class="form-group">
+                            <label class="form-label" for="cup-codigo">Código del Cupón</label>
+                            <input type="text" id="cup-codigo" class="form-input" required placeholder="Ej: BEAT20, PROMO5">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                            <div class="form-group">
+                                <label class="form-label" for="cup-tipo">Tipo de Descuento</label>
+                                <select id="cup-tipo" class="form-input" required>
+                                    <option value="fijo">Fijo ($)</option>
+                                    <option value="porcentaje">Porcentaje (%)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cup-valor">Valor</label>
+                                <input type="number" step="0.01" id="cup-valor" class="form-input" required placeholder="Ej: 5">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cup-expiracion">Fecha de Expiración</label>
+                            <input type="datetime-local" id="cup-expiracion" class="form-input">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                            <div class="form-group">
+                                <label class="form-label" for="cup-max-total">Límite Usos Totales</label>
+                                <input type="number" id="cup-max-total" class="form-input" placeholder="Sin límite" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cup-max-user">Usos por Usuario</label>
+                                <input type="number" id="cup-max-user" class="form-input" value="1" min="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Asignar a Usuario (UUID — opcional)</label>
+                            <input type="text" id="cup-asignado" class="form-input" placeholder="Dejar vacío para cupón global">
+                        </div>
+                        <div class="toggle-wrap">
+                            <label class="toggle">
+                                <input type="checkbox" id="cup-activo" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <div>
+                                <div class="toggle-label">Activo</div>
+                            </div>
+                        </div>
+                        <div id="cup-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <div id="cup-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <button type="submit" class="booking-action-btn">Crear Cupón</button>
+                    </form>
+                </div>
+                <div>
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Cupones Creados</h3>
+                    <div id="coupons-list" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="color:#444;font-size:0.8rem;">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ TAB: CONFIG ═════════════════════════════════ -->
+        <div id="panel-config" class="tab-panel">
+            <div style="max-width:500px;">
+                <div class="calendar-wrapper">
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Tasa de Cambio Bs/USD</h3>
+                    <p style="font-size:0.75rem;color:#666;margin-bottom:16px;line-height:1.5;">
+                        Esta tasa se usa en el checkout para calcular el precio en bolívares (PagoMóvil)
+                        cuando el cliente elige pagar en Bs.
+                    </p>
+                    <form id="config-form">
+                        <div class="form-group">
+                            <label class="form-label" for="config-tasa">1 USD = X Bolívares</label>
+                            <input type="number" step="0.01" id="config-tasa" class="form-input" required placeholder="Ej: 60">
+                        </div>
+                        <div id="config-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <div id="config-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <button type="submit" class="booking-action-btn">Guardar Tasa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -481,16 +590,30 @@ function setupDropZone(zoneId, inputId, opts = {}) {
 async function initAdminPanel() {
     try {
         await new Promise(r => setTimeout(r, 300));
-        $('admin-profile-name').textContent = 'Admin';
+
+        // Admin guard: verificar rol
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = '../login.html'; return; }
+        const perfil = await getPerfilUsuario(session.user.id);
+        if (!perfil || perfil.role !== 'admin') {
+            mostrarError('No tienes permisos de administrador. Si crees que esto es un error, contacta al administrador.');
+            return;
+        }
+
+        $('admin-profile-name').textContent = perfil.nombre + ' ' + (perfil.apellido || '');
 
         await Promise.all([
             cargarBookings(),
             cargarWeeklySlots(),
             cargarBlockedDates(),
-            cargarBeatsDB()
+            cargarBeatsDB(),
+            cargarReferidos(),
+            cargarCoupons(),
+            cargarConfig()
         ]);
 
-        $('admin-logout-btn').addEventListener('click', () => {
+        $('admin-logout-btn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
             window.location.href = '../index.html';
         });
 
@@ -506,11 +629,11 @@ window.addEventListener('load', initAdminPanel);
 
 /* ── Tabs ────────────────────────────────────────────── */
 function switchTab(tab) {
-    ['bookings','weekly-slots','blocked-dates','beats'].forEach(t => {
+    ['bookings','weekly-slots','blocked-dates','beats','referrals','coupons','config'].forEach(t => {
         $(`panel-${t}`).classList.toggle('active', t === tab);
         $(`tab-btn-${t}`).classList.toggle('active', t === tab);
     });
-    const titles = { bookings:'Reservas', 'weekly-slots':'Horarios Semanales', 'blocked-dates':'Bloqueos', beats:'Catálogo de Beats' };
+    const titles = { bookings:'Reservas', 'weekly-slots':'Horarios Semanales', 'blocked-dates':'Bloqueos', beats:'Catálogo de Beats', referrals:'Referidos', coupons:'Cupones', config:'Configuración' };
     $('admin-page-title').textContent = titles[tab];
 }
 
@@ -1028,6 +1151,182 @@ $('beats-form').addEventListener('submit', async (e) => {
     btn.disabled = false;
 });
 } catch(e) { console.error(e); }
+
+/* ── Referrals ───────────────────────────────────────── */
+async function cargarReferidos() {
+    const { data: refs } = await safeQuery(() =>
+        supabase.from('referrals').select('*, referrer:referrer_id(nombre, apellido), referred:referred_id(nombre, apellido)').order('created_at', { ascending: false })
+    );
+    const tbody = $('referrals-tbody');
+    if (!refs || !refs.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#444;text-align:center;padding:30px;">Sin referidos aún.</td></tr>';
+        return;
+    }
+
+    // Fetch coupon info per referral to show status
+    tbody.innerHTML = (await Promise.all(refs.map(async (r) => {
+        const refNombre = (r.referrer?.nombre || '') + ' ' + (r.referrer?.apellido || '');
+        const refdNombre = (r.referred?.nombre || '') + ' ' + (r.referred?.apellido || '');
+        const fecha = new Date(r.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        // Buscar cupones del referido que fueron generados automáticamente (BIENVENIDO-* o REF-*)
+        const { data: cupRefd } = await supabase.from('coupons').select('codigo, estado').eq('asignado_a', r.referred_id).ilike('codigo', 'BIENVENIDO-%');
+        const { data: cupRefr } = await supabase.from('coupons').select('codigo, estado').eq('asignado_a', r.referrer_id).ilike('codigo', 'REF-%');
+
+        const badge = (cup) => cup && cup.length > 0
+            ? '<span class="badge ' + (cup[0].estado === 'activo' ? 'aprobada' : 'cancelada') + '">' + cup[0].codigo + ' (' + cup[0].estado + ')</span>'
+            : '<span style="color:#444;">—</span>';
+
+        return '<tr><td><strong>' + esc(refNombre) + '</strong></td><td>' + esc(refdNombre) + '</td><td>' + fecha + '</td><td>' + badge(cupRefr) + '</td><td>' + badge(cupRefd) + '</td></tr>';
+    }))).join('');
+}
+
+/* ── Coupons ─────────────────────────────────────────── */
+async function cargarCoupons() {
+    const { data: cups } = await safeQuery(() =>
+        supabase.from('coupons').select('*').order('created_at', { ascending: false })
+    );
+    const list = $('coupons-list');
+    if (!cups || !cups.length) {
+        list.innerHTML = '<div style="color:#444;font-size:0.8rem;">Sin cupones creados.</div>';
+        return;
+    }
+
+    list.innerHTML = cups.map(c => {
+        const valorStr = c.tipo_descuento === 'porcentaje' ? c.valor + '%' : '$' + parseFloat(c.valor).toFixed(2);
+        const expStr = c.fecha_expiracion ? new Date(c.fecha_expiracion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—';
+        const asignadoStr = c.asignado_a ? 'Usuario: ' + c.asignado_a.substring(0, 8) + '…' : 'Global';
+        return '<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:14px 16px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                        '<span style="font-weight:900;font-size:0.9rem;letter-spacing:1px;color:' + (c.estado === 'activo' ? '#4caf50' : '#ff5555') + ';">' + esc(c.codigo) + '</span>' +
+                        '<span class="badge ' + (c.estado === 'activo' ? 'aprobada' : 'cancelada') + '">' + c.estado + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:0.7rem;color:#666;margin-top:4px;">' + valorStr + ' | Vence: ' + expStr + ' | ' + asignadoStr + '</div>' +
+                    '<div style="font-size:0.65rem;color:#555;margin-top:2px;">Límite: ' + (c.max_usos_totales || '∞') + ' totales · ' + c.max_usos_por_usuario + ' por usuario</div>' +
+                '</div>' +
+                '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+                    '<label class="toggle" style="width:36px;height:20px;">' +
+                        '<input type="checkbox" ' + (c.estado === 'activo' ? 'checked' : '') + ' onchange="toggleCoupon(\'' + c.id + '\', this.checked)">' +
+                        '<span class="slider"></span>' +
+                    '</label>' +
+                    '<button class="btn-action cancel" onclick="eliminarCoupon(\'' + c.id + '\')" style="padding:4px 10px;font-size:0.7rem;">✕</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+async function toggleCoupon(id, activo) {
+    const { error } = await supabase.from('coupons').update({ estado: activo ? 'activo' : 'inactivo' }).eq('id', id);
+    if (!error) cargarCoupons();
+}
+
+async function eliminarCoupon(id) {
+    if (!confirm('¿Eliminar este cupón?')) return;
+    await supabase.from('coupons').delete().eq('id', id);
+    cargarCoupons();
+}
+
+$('coupon-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('cup-error');
+    const ok  = $('cup-success');
+    const btn = e.target.querySelector('button[type=submit]');
+
+    err.style.display = 'none';
+    ok.style.display = 'none';
+
+    const codigo = $('cup-codigo').value.trim().toUpperCase();
+    const tipo = $('cup-tipo').value;
+    const valor = parseFloat($('cup-valor').value);
+    const expiracion = $('cup-expiracion').value || null;
+    const maxTotal = parseInt($('cup-max-total').value) || null;
+    const maxUser = parseInt($('cup-max-user').value) || 1;
+    const asignado = $('cup-asignado').value.trim() || null;
+    const activo = $('cup-activo').checked;
+
+    if (!codigo) { err.textContent = 'El código es obligatorio'; err.style.display = 'block'; return; }
+    if (!valor || valor <= 0) { err.textContent = 'El valor debe ser mayor a 0'; err.style.display = 'block'; return; }
+
+    btn.textContent = 'Creando...';
+    btn.disabled = true;
+
+    const { error } = await supabase.from('coupons').insert([{
+        codigo, tipo_descuento: tipo, valor,
+        fecha_expiracion: expiracion ? new Date(expiracion).toISOString() : null,
+        max_usos_totales: maxTotal,
+        max_usos_por_usuario: maxUser,
+        estado: activo ? 'activo' : 'inactivo',
+        asignado_a: asignado || null
+    }]);
+
+    if (error) {
+        err.textContent = 'Error: ' + (error.message.includes('duplicate') ? 'El código "' + codigo + '" ya existe' : error.message);
+        err.style.display = 'block';
+        btn.textContent = 'Crear Cupón';
+        btn.disabled = false;
+        return;
+    }
+
+    // If assigned, create user_coupons record
+    if (asignado) {
+        const { data: newCup } = await supabase.from('coupons').select('id').eq('codigo', codigo).single();
+        if (newCup) {
+            await supabase.from('user_coupons').insert([{ user_id: asignado, coupon_id: newCup.id }]);
+        }
+    }
+
+    ok.textContent = 'Cupón "' + codigo + '" creado.';
+    ok.style.display = 'block';
+    e.target.reset();
+    $('cup-activo').checked = true;
+    btn.textContent = 'Crear Cupón';
+    btn.disabled = false;
+    cargarCoupons();
+});
+
+/* ── Config ──────────────────────────────────────────── */
+async function cargarConfig() {
+    const { data } = await safeQuery(() =>
+        supabase.from('app_config').select('value').eq('key', 'tasa_cambio_bs').single()
+    );
+    if (data && data.value) {
+        $('config-tasa').value = data.value;
+    }
+}
+
+$('config-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('config-error');
+    const ok  = $('config-success');
+    const btn = e.target.querySelector('button[type=submit]');
+    err.style.display = 'none';
+    ok.style.display = 'none';
+
+    const tasa = parseFloat($('config-tasa').value);
+    if (!tasa || tasa <= 0) {
+        err.textContent = 'Ingresa una tasa válida mayor a 0';
+        err.style.display = 'block';
+        return;
+    }
+
+    btn.textContent = 'Guardando...';
+    btn.disabled = true;
+
+    const { data: existing } = await supabase.from('app_config').select('id').eq('key', 'tasa_cambio_bs').single();
+    if (existing) {
+        await supabase.from('app_config').update({ value: tasa, updated_at: new Date().toISOString() }).eq('key', 'tasa_cambio_bs');
+    } else {
+        await supabase.from('app_config').insert([{ key: 'tasa_cambio_bs', value: tasa }]);
+    }
+
+    ok.textContent = 'Tasa actualizada: 1 USD = ' + tasa + ' Bs';
+    ok.style.display = 'block';
+    btn.textContent = 'Guardar Tasa';
+    btn.disabled = false;
+});
 </script>
 
 </body>

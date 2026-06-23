@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Prodz</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .co-wrapper { min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px 100px; }
+        .co-card { background: rgba(17,17,17,0.8); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; width: 100%; max-width: 520px; padding: 32px 28px; backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .co-header { text-align: center; margin-bottom: 28px; }
+        .co-header img { height: 30px; margin-bottom: 12px; }
+        .co-header h1 { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
+        .co-section { margin-bottom: 24px; }
+        .co-section-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+        .co-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.85rem; }
+        .co-item-label { color: #888; }
+        .co-item-value { font-weight: 700; text-align: right; }
+        .co-price-base { font-size: 1.2rem; font-weight: 900; color: #4caf50; }
+        .co-payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+        .co-payment-option { background: rgba(255,255,255,0.02); border: 2px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .co-payment-option:hover { border-color: rgba(255,255,255,0.15); }
+        .co-payment-option.selected { border-color: var(--accent-color, #fff); background: rgba(255,255,255,0.06); }
+        .co-payment-option .label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .co-payment-option .sub { font-size: 0.6rem; color: #666; margin-top: 4px; }
+        .co-coupon-row { display: flex; gap: 10px; }
+        .co-coupon-row input { flex: 1; }
+        .co-coupon-row button { flex-shrink: 0; padding: 14px 20px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; font-weight: 700; font-size: 0.7rem; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: all 0.3s ease; }
+        .co-coupon-row button:hover { border-color: white; }
+        .co-coupon-row button.applied { background: #4caf50; border-color: #4caf50; color: white; }
+        .co-user-coupons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .co-coupon-option { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 12px; }
+        .co-coupon-option:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+        .co-coupon-option.selected { border-color: #4caf50; background: rgba(76,175,80,0.08); }
+        .co-coupon-option .co-coupon-opt-code { font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; color: #4caf50; flex: 1; }
+        .co-coupon-option .co-coupon-opt-valor { font-weight: 900; font-size: 0.9rem; white-space: nowrap; }
+        .co-coupon-option .co-coupon-opt-exp { font-size: 0.6rem; color: #555; white-space: nowrap; }
+        .co-coupon-msg { font-size: 0.7rem; margin-top: 6px; padding: 6px 10px; border-radius: 6px; display: none; }
+        .co-coupon-msg.success { display: block; color: #4caf50; background: rgba(76,175,80,0.08); }
+        .co-coupon-msg.error { display: block; color: #ff6b6b; background: rgba(255,50,50,0.08); }
+        .co-total-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 8px; font-size: 0.9rem; }
+        .co-total-row .label { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .co-total-row .value { font-size: 1.5rem; font-weight: 900; }
+        .co-total-row .value .original { font-size: 0.8rem; color: #555; text-decoration: line-through; margin-right: 8px; }
+        .co-discount { color: #4caf50; font-size: 0.75rem; font-weight: 700; }
+        .co-whatsapp-btn { display: block; width: 100%; padding: 18px; background: #25D366; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease; margin-top: 12px; }
+        .co-whatsapp-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37,211,102,0.3); }
+        .co-whatsapp-btn:disabled { background: #222; color: #555; cursor: not-allowed; transform: none; box-shadow: none; }
+        .co-back { display: block; text-align: center; margin-top: 16px; font-size: 0.75rem; color: #555; text-decoration: none; }
+        .co-back:hover { color: white; }
+        .co-loading { text-align: center; padding: 60px 0; color: #555; font-size: 0.8rem; }
+        .co-tasa-info { font-size: 0.7rem; color: #666; margin-top: 4px; }
+        .co-license-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 14px; }
+        .co-license-option { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.3s ease; text-align: center; }
+        .co-license-option:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+        .co-license-option.selected { border-color: var(--accent-color, #fff); background: rgba(255,255,255,0.06); }
+        .co-license-option .co-license-name { font-weight: 800; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; color: #ccc; }
+        .co-license-option .co-license-price { font-weight: 900; font-size: 1.1rem; color: #4caf50; margin: 4px 0; }
+        .co-license-option .co-license-desc { font-size: 0.6rem; color: #555; line-height: 1.3; }
+        @media (max-width: 480px) {
+            .co-card { padding: 24px 16px; }
+            .co-payment-options { grid-template-columns: 1fr; }
+            .co-coupon-row { flex-direction: column; }
+            .co-coupon-row button { width: 100%; }
+            .co-total-row .value { font-size: 1.2rem; }
+            .co-license-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div style="position:fixed;inset:0;background:radial-gradient(circle at 50% 0%,#ffffff18 0%,#050505 70%);pointer-events:none;z-index:0;"></div>
+
+<div class="co-wrapper" style="position:relative;z-index:1;">
+    <div class="co-card" id="co-card">
+        <div class="co-loading" id="co-loading">CARGANDO...</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+(async () => {
+    const WHATSAPP = "584246603660";
+    const params = new URLSearchParams(window.location.search);
+    const itemName = params.get('item') || 'Producto';
+    const itemUrlPrice = parseFloat(params.get('price')) || 0;
+    const itemType = params.get('type') || 'beat';
+    const itemImg = params.get('img') || '';
+    const itemMsg = params.get('msg') || '';
+
+    // Tarifas fijas
+    const LICENSES = [
+        { id:'mp3', name:'MP3', price:15, desc:'Ideal para maquetas o uso personal' },
+        { id:'wav', name:'WAV', price:20, desc:'Recomendada para lanzamientos oficiales' },
+        { id:'premium', name:'Premium', price:25, desc:'WAV + STEMS (pistas separadas)' },
+        { id:'full', name:'Full Project', price:30, desc:'Proyecto original .FLP + presets' },
+        { id:'exclusiva', name:'Exclusiva', price:50, desc:'Retiro del catálogo, derechos ilimitados + FLP' },
+    ];
+    const SERVICES = [
+        { id:'master', name:'Máster Single', price:15, desc:'Procesamiento de WAV mezclado' },
+        { id:'mix-basic', name:'Mix & Master Básico', price:30, desc:'Mezcla de voz sobre un beat' },
+        { id:'mix-pro', name:'Mix & Master Avanzado', price:60, desc:'Mezcla completa por pistas (stems ilimitados)' },
+        { id:'podcast-basic', name:'Edición Básica Podcast', price:30, desc:'Limpieza, nivelación, máx 45 min' },
+        { id:'podcast-premium', name:'Edición Premium Podcast', price:50, desc:'Montaje, intro/outro, diseño sonoro' },
+        { id:'tuning', name:'Afinación de Voces', price:10, desc:'Melodyne o Auto-Tune (por canción)' },
+        { id:'reconstruction', name:'Reconstrucción de Beats', price:0, desc:'Consultar precio según complejidad' },
+    ];
+
+    // Estados
+    let paymentMethod = 'usd';
+    let tasaCambio = 60;
+    let appliedCoupon = null;
+    let discountAmount = 0;
+    let userCoupons = [];
+    let selectedLicense = itemType === 'beat' ? LICENSES[0] : null;
+    let selectedService = null;
+    if (itemType === 'service') {
+        for (const s of SERVICES) {
+            if (itemMsg.toLowerCase().includes(s.name.toLowerCase())) {
+                selectedService = s; break;
+            }
+        }
+        if (!selectedService) selectedService = itemUrlPrice > 0 ? null : SERVICES[0];
+    }
+
+    // Cargar tasa de cambio
+    try {
+        const { data: configData } = await supabase.from('app_config').select('value').eq('key', 'tasa_cambio_bs').single();
+        if (configData && configData.value) tasaCambio = parseFloat(configData.value) || 60;
+    } catch (e) {}
+
+    // Cargar cupones del usuario
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        try { userCoupons = await getCuponesUsuario(session.user.id); } catch (e) {}
+    }
+
+    function getBasePrice() {
+        if (itemType === 'beat' && selectedLicense) return selectedLicense.price;
+        if (itemType === 'service' && selectedService) return selectedService.price;
+        return itemUrlPrice;
+    }
+
+    function calcDiscount() {
+        if (!appliedCoupon) return 0;
+        const base = getBasePrice();
+        const d = appliedCoupon.tipo_descuento === 'porcentaje'
+            ? base * (appliedCoupon.valor / 100)
+            : parseFloat(appliedCoupon.valor);
+        return Math.min(d, base);
+    }
+
+    function formatPrice() {
+        const base = getBasePrice();
+        const totalUsd = Math.max(0, base - discountAmount);
+        if (paymentMethod === 'ves') {
+            return { usd: totalUsd, display: 'Bs ' + (totalUsd * tasaCambio).toFixed(2) };
+        }
+        return { usd: totalUsd, display: '$' + totalUsd.toFixed(2) + ' USD' };
+    }
+
+    function renderizar() {
+        discountAmount = calcDiscount();
+        const basePrice = getBasePrice();
+        const priceInfo = formatPrice();
+
+        const card = document.getElementById('co-card');
+
+        let productHtml = `<div class="co-item"><span class="co-item-label">${itemType === 'beat' ? 'Beat' : 'Servicio'}</span><span class="co-item-value co-price-base">${esc(itemName)}</span></div>`;
+
+        if (itemType === 'beat') {
+            const licCards = LICENSES.map(l => `
+                <div class="co-license-option${selectedLicense && selectedLicense.id === l.id ? ' selected' : ''}" data-license-id="${l.id}">
+                    <div class="co-license-name">${l.name}</div>
+                    <div class="co-license-price">$${l.price}</div>
+                    <div class="co-license-desc">${l.desc}</div>
+                </div>`).join('');
+            productHtml += `<div style="margin:12px 0 4px"><div class="co-section-title" style="border:none;padding:0;margin-bottom:10px;">Selecciona tu licencia</div><div class="co-license-grid">${licCards}</div></div>
+            <div class="co-item"><span class="co-item-label">Precio Base</span><span class="co-item-value">$${basePrice.toFixed(2)} USD</span></div>`;
+        } else if (itemType === 'service' && selectedService && itemUrlPrice === 0) {
+            const svCards = SERVICES.map(s => `
+                <div class="co-license-option${selectedService && selectedService.id === s.id ? ' selected' : ''}" data-service-id="${s.id}">
+                    <div class="co-license-name">${s.name}</div>
+                    <div class="co-license-price">${s.price ? '$' + s.price : 'A consultar'}</div>
+                    <div class="co-license-desc">${s.desc}</div>
+                </div>`).join('');
+            productHtml += `<div style="margin:12px 0 4px"><div class="co-section-title" style="border:none;padding:0;margin-bottom:10px;">Selecciona el servicio</div><div class="co-license-grid">${svCards}</div></div>
+            <div class="co-item"><span class="co-item-label">Precio Base</span><span class="co-item-value">$${basePrice.toFixed(2)} USD</span></div>`;
+        } else {
+            productHtml += `<div class="co-item"><span class="co-item-label">Precio Base</span><span class="co-item-value">$${itemUrlPrice.toFixed(2)} USD</span></div>`;
+        }
+
+        // Coupon cards
+        let coupHtml = '';
+        if (userCoupons.length > 0) {
+            const items = userCoupons.map(uc => {
+                const c = uc.coupon;
+                const vs = c.tipo_descuento === 'porcentaje' ? c.valor + '%' : '$' + parseFloat(c.valor).toFixed(2) + ' USD';
+                const ex = c.fecha_expiracion ? new Date(c.fecha_expiracion + 'T23:59:59').toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '';
+                const sel = appliedCoupon && appliedCoupon.id === c.id;
+                return `<div class="co-coupon-option${sel ? ' selected' : ''}" data-coupon-id="${c.id}"><div class="co-coupon-opt-code">${esc(c.codigo)}</div><div class="co-coupon-opt-valor">${vs}</div>${ex ? '<div class="co-coupon-opt-exp">Vence: ' + ex + '</div>' : ''}</div>`;
+            }).join('');
+            coupHtml = '<div class="co-user-coupons">' + items + '</div>';
+        }
+
+        card.innerHTML = `
+            <div class="co-header">
+                <a href="index.html"><img src="assets/images/Prodz Logo.png" alt="Prodz"></a>
+                <h1>Checkout</h1>
+            </div>
+
+            <div class="co-section"><div class="co-section-title">Producto</div>${productHtml}</div>
+
+            <div class="co-section">
+                <div class="co-section-title">Método de Pago</div>
+                <div class="co-payment-options">
+                    <div class="co-payment-option ${paymentMethod === 'usd' ? 'selected' : ''}" data-method="usd"><div class="label">USD</div><div class="sub">PayPal / Zelle</div></div>
+                    <div class="co-payment-option ${paymentMethod === 'ves' ? 'selected' : ''}" data-method="ves"><div class="label">Bs</div><div class="sub">PagoMóvil</div></div>
+                </div>
+                ${paymentMethod === 'ves' ? '<div class="co-tasa-info">1 USD = ' + tasaCambio.toFixed(2) + ' Bs | Total: Bs ' + (Math.max(0, basePrice - discountAmount) * tasaCambio).toFixed(2) + '</div>' : ''}
+            </div>
+
+            <div class="co-section">
+                <div class="co-section-title">Cupón de Descuento</div>
+                ${coupHtml}
+                <div class="co-coupon-row">
+                    <input type="text" id="co-coupon-input" class="form-input" placeholder="${userCoupons.length > 0 ? 'O ingresa un código manual...' : 'Ingresa tu código'}" value="${appliedCoupon ? esc(appliedCoupon.codigo) : ''}" ${appliedCoupon ? 'readonly' : ''}>
+                    <button id="co-coupon-btn" ${appliedCoupon ? 'class="applied"' : ''}>${appliedCoupon ? 'Aplicado' : 'Aplicar'}</button>
+                </div>
+                <div id="co-coupon-msg" class="co-coupon-msg ${appliedCoupon ? 'success' : ''}" style="${appliedCoupon ? 'display:block;' : ''}">${appliedCoupon ? 'Descuento: ' + (appliedCoupon.tipo_descuento === 'porcentaje' ? appliedCoupon.valor + '%' : '$' + parseFloat(appliedCoupon.valor).toFixed(2) + ' USD') : ''}</div>
+            </div>
+
+            <div class="co-section">
+                <div class="co-total-row">
+                    <span class="label">Total</span>
+                    <span class="value">${discountAmount > 0 ? '<span class="original">$' + basePrice.toFixed(2) + '</span>' : ''}${priceInfo.display}</span>
+                </div>
+                ${discountAmount > 0 ? '<div class="co-discount" style="text-align:right;">Descuento: -' + (appliedCoupon.tipo_descuento === 'porcentaje' ? appliedCoupon.valor + '%' : '$' + parseFloat(appliedCoupon.valor).toFixed(2) + ' USD') + '</div>' : ''}
+            </div>
+
+            <button class="co-whatsapp-btn" id="co-confirm-btn">Confirmar y Enviar a WhatsApp</button>
+            <a href="javascript:history.back()" class="co-back">← Cancelar</a>
+        `;
+
+        // ── Event listeners ──
+
+        document.querySelectorAll('.co-payment-option').forEach(el => {
+            el.addEventListener('click', () => { paymentMethod = el.dataset.method; renderizar(); });
+        });
+
+        document.querySelectorAll('.co-license-option').forEach(el => {
+            el.addEventListener('click', () => {
+                const lid = el.dataset.licenseId;
+                if (lid) {
+                    const lic = LICENSES.find(l => l.id === lid);
+                    if (lic) { selectedLicense = lic; renderizar(); }
+                }
+                const sid = el.dataset.serviceId;
+                if (sid) {
+                    const sv = SERVICES.find(s => s.id === sid);
+                    if (sv) { selectedService = sv; renderizar(); }
+                }
+            });
+        });
+
+        document.querySelectorAll('.co-coupon-option').forEach(el => {
+            el.addEventListener('click', async () => {
+                const couponId = el.dataset.couponId;
+                const uc = userCoupons.find(u => u.coupon.id === couponId);
+                if (!uc) return;
+                if (appliedCoupon && appliedCoupon.id === couponId) {
+                    appliedCoupon = null; discountAmount = 0; renderizar(); return;
+                }
+                const c = uc.coupon;
+                if (c.fecha_expiracion && new Date(c.fecha_expiracion + 'T23:59:59') <= new Date()) {
+                    const m = document.getElementById('co-coupon-msg');
+                    m.textContent = 'Este cupón ya expiró'; m.className = 'co-coupon-msg error'; m.style.display = 'block'; return;
+                }
+                if (c.max_usos_por_usuario && uc.usos_actuales >= c.max_usos_por_usuario) {
+                    const m = document.getElementById('co-coupon-msg');
+                    m.textContent = 'Ya has usado este cupón el máximo de veces permitido'; m.className = 'co-coupon-msg error'; m.style.display = 'block'; return;
+                }
+                appliedCoupon = c;
+                discountAmount = calcDiscount();
+                renderizar();
+            });
+        });
+
+        document.getElementById('co-coupon-btn').addEventListener('click', async () => {
+            if (appliedCoupon) { appliedCoupon = null; discountAmount = 0; renderizar(); return; }
+            const code = document.getElementById('co-coupon-input').value.trim().toUpperCase();
+            const msgEl = document.getElementById('co-coupon-msg');
+            if (!code) {
+                msgEl.textContent = 'Ingresa un código de cupón'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block'; return;
+            }
+            try {
+                const { data: coupon } = await supabase.from('coupons').select('*').eq('codigo', code).eq('estado', 'activo').single();
+                if (!coupon) {
+                    msgEl.textContent = 'Cupón inválido o expirado'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block'; return;
+                }
+                if (coupon.fecha_expiracion && new Date(coupon.fecha_expiracion) <= new Date()) {
+                    msgEl.textContent = 'Este cupón ya expiró'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block'; return;
+                }
+                if (coupon.asignado_a && (!session || session.user.id !== coupon.asignado_a)) {
+                    msgEl.textContent = 'Este cupón no está disponible para tu cuenta'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block'; return;
+                }
+                if (coupon.max_usos_totales !== null) {
+                    const { count } = await supabase.from('user_coupons').select('id', { count: 'exact', head: true }).eq('coupon_id', coupon.id);
+                    if (count >= coupon.max_usos_totales) {
+                        msgEl.textContent = 'Este cupón ya alcanzó su límite de usos'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block'; return;
+                    }
+                }
+                if (session && coupon.max_usos_por_usuario) {
+                    const { data: uc2 } = await supabase.from('user_coupons').select('usos_actuales').eq('user_id', session.user.id).eq('coupon_id', coupon.id).single();
+                    if (uc2 && uc2.usos_actuales >= coupon.max_usos_por_usuario) {
+                        msgEl.textContent = 'Ya has usado este cupón el máximo de veces permitido'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block'; return;
+                    }
+                }
+                appliedCoupon = coupon;
+                discountAmount = calcDiscount();
+                renderizar();
+            } catch (e) {
+                msgEl.textContent = 'Error al verificar cupón'; msgEl.className = 'co-coupon-msg error'; msgEl.style.display = 'block';
+            }
+        });
+
+        document.getElementById('co-confirm-btn').addEventListener('click', async () => {
+            const basePrice = getBasePrice();
+            const finalPrice = Math.max(0, basePrice - discountAmount);
+            const pMethod = paymentMethod === 'ves' ? 'PagoMóvil (Bs)' : 'USD (PayPal/Zelle)';
+            const totalDisplay = paymentMethod === 'ves' ? 'Bs ' + (finalPrice * tasaCambio).toFixed(2) : '$' + finalPrice.toFixed(2) + ' USD';
+
+            let productLine = itemName;
+            if (itemType === 'beat' && selectedLicense) productLine += ' (' + selectedLicense.name + ')';
+
+            let msg = 'Hola! Quiero adquirir:';
+            msg += '%0A• Producto: ' + encodeURIComponent(productLine);
+            if (itemType === 'beat' && selectedLicense) {
+                msg += '%0A• Licencia: ' + selectedLicense.name + ' ($' + selectedLicense.price.toFixed(2) + ' USD)';
+            }
+            if (itemType === 'service' && selectedService) {
+                msg += '%0A• Servicio: ' + selectedService.name + ' ($' + (selectedService.price || 0).toFixed(2) + ' USD)';
+            }
+            msg += '%0A• Precio base: $' + basePrice.toFixed(2) + ' USD';
+            if (appliedCoupon) {
+                msg += '%0A• Cupón aplicado: ' + appliedCoupon.codigo + ' (' + (appliedCoupon.tipo_descuento === 'porcentaje' ? appliedCoupon.valor + '%' : '$' + appliedCoupon.valor + ' USD') + ')';
+            }
+            msg += '%0A• Total: ' + encodeURIComponent(totalDisplay);
+            msg += '%0A• Método de pago: ' + encodeURIComponent(pMethod);
+
+            if (session) {
+                const perfil = await getPerfilUsuario(session.user.id);
+                if (perfil) msg += '%0A• Cliente: ' + encodeURIComponent(perfil.nombre + ' ' + (perfil.apellido || ''));
+            }
+            if (appliedCoupon && session) {
+                const { data: existing } = await supabase.from('user_coupons').select('id, usos_actuales').eq('user_id', session.user.id).eq('coupon_id', appliedCoupon.id).single();
+                if (existing) {
+                    await supabase.from('user_coupons').update({ usos_actuales: existing.usos_actuales + 1 }).eq('id', existing.id);
+                } else {
+                    await supabase.from('user_coupons').insert([{ user_id: session.user.id, coupon_id: appliedCoupon.id, usos_actuales: 1 }]);
+                }
+            }
+            window.open('https://wa.me/' + WHATSAPP + '?text=' + msg, '_blank');
+        });
+    }
+
+    function esc(v) { return (v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    renderizar();
+})();
+</script>
+</body>
+</html>

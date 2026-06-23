@@ -34,3 +34,53 @@ async function getPerfilUsuario(userId) {
         return null;
     }
 }
+
+// ── Referidos ────────────────────────────────────────────
+function detectarReferidoURL() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref && ref.length > 10) {
+            localStorage.setItem('prodz_referido_por', ref);
+        }
+    } catch (e) {}
+}
+
+async function getReferidos() {
+    const { data, error } = await supabase
+        .from('referrals')
+        .select('*, referrer:referrer_id(nombre, apellido), referred:referred_id(nombre, apellido)')
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+}
+
+async function getCuponesUsuario(userId) {
+    const { data, error } = await supabase
+        .from('user_coupons')
+        .select('*, coupon:coupon_id(*)')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    const now = new Date();
+    return (data || []).filter(uc => {
+        const c = uc.coupon;
+        if (!c || c.estado !== 'activo') return false;
+        if (c.fecha_expiracion && new Date(c.fecha_expiracion) <= now) return false;
+        if (c.max_usos_totales !== null && c.max_usos_totales <= 0) return false;
+        if (uc.usos_actuales >= c.max_usos_por_usuario) return false;
+        return true;
+    });
+}
+
+async function getAllCouponsAdmin() {
+    const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+}
+
+// Detectar referido en la URL al cargar cualquier página
+detectarReferidoURL();

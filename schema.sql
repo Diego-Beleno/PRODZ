@@ -88,7 +88,52 @@ CREATE TABLE IF NOT EXISTS public.beats (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 7. FUNCIÓN: is_admin()
+-- 7. TABLA: referrals (historial de referidos)
+CREATE TABLE IF NOT EXISTS public.referrals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  referrer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  referred_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(referred_id)
+);
+
+-- 8. TABLA: coupons (definición de cupones)
+CREATE TABLE IF NOT EXISTS public.coupons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo TEXT NOT NULL UNIQUE,
+  tipo_descuento TEXT NOT NULL CHECK (tipo_descuento IN ('fijo', 'porcentaje')),
+  valor NUMERIC(10,2) NOT NULL CHECK (valor > 0),
+  fecha_expiracion TIMESTAMPTZ,
+  max_usos_totales INTEGER DEFAULT NULL CHECK (max_usos_totales IS NULL OR max_usos_totales > 0),
+  max_usos_por_usuario INTEGER DEFAULT 1 CHECK (max_usos_por_usuario > 0),
+  estado TEXT NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
+  asignado_a UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 9. TABLA: user_coupons (relación N:N + control de usos)
+CREATE TABLE IF NOT EXISTS public.user_coupons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  coupon_id UUID NOT NULL REFERENCES public.coupons(id) ON DELETE CASCADE,
+  usos_actuales INTEGER DEFAULT 0 CHECK (usos_actuales >= 0),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, coupon_id)
+);
+
+-- 10. TABLA: app_config (configuraciones globales)
+CREATE TABLE IF NOT EXISTS public.app_config (
+  id SERIAL PRIMARY KEY,
+  key TEXT UNIQUE NOT NULL,
+  value JSONB NOT NULL DEFAULT 'null',
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO public.app_config (key, value)
+VALUES ('tasa_cambio_bs', '60')
+ON CONFLICT (key) DO NOTHING;
+
+-- 11. FUNCIÓN: is_admin()
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE plpgsql STABLE SECURITY DEFINER
@@ -102,12 +147,45 @@ BEGIN
 END;
 $$;
 
--- 8. TRIGGER: Crear perfil automáticamente al registrar usuario
+-- 11. FUNCIÓN: crear_cupones_referido (genera cupones de $5 para ambos)
+CREATE OR REPLACE FUNCTION public.crear_cupones_referido(p_referrer_id UUID, p_referred_id UUID)
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+DECLARE
+  v_coupon_referred_id UUID;
+  v_coupon_referrer_id UUID;
+  v_codigo_referred TEXT;
+  v_codigo_referrer TEXT;
+  v_expira TIMESTAMPTZ;
+BEGIN
+  v_expira := now() + interval '30 days';
+  v_codigo_referred := 'BIENVENIDO-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+  v_codigo_referrer := 'REF-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+
+  INSERT INTO public.coupons (codigo, tipo_descuento, valor, fecha_expiracion, max_usos_totales, max_usos_por_usuario, estado, asignado_a)
+  VALUES (v_codigo_referred, 'fijo', 5, v_expira, 1, 1, 'activo', p_referred_id)
+  RETURNING id INTO v_coupon_referred_id;
+
+  INSERT INTO public.user_coupons (user_id, coupon_id) VALUES (p_referred_id, v_coupon_referred_id);
+
+  INSERT INTO public.coupons (codigo, tipo_descuento, valor, fecha_expiracion, max_usos_totales, max_usos_por_usuario, estado, asignado_a)
+  VALUES (v_codigo_referrer, 'fijo', 5, v_expira, 1, 1, 'activo', p_referrer_id)
+  RETURNING id INTO v_coupon_referrer_id;
+
+  INSERT INTO public.user_coupons (user_id, coupon_id) VALUES (p_referrer_id, v_coupon_referrer_id);
+END;
+$$;
+
+-- 12. TRIGGER: Crear perfil automáticamente al registrar usuario (con referidos)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = 'public'
 AS $$
+DECLARE
+  v_referrer_id UUID;
 BEGIN
   INSERT INTO public.profiles (id, nombre, apellido, telefono, role)
   VALUES (
@@ -117,6 +195,21 @@ BEGIN
     NEW.raw_user_meta_data->>'telefono',
     'client'
   );
+
+  -- Detectar referido desde meta-data (enviado desde signup)
+  BEGIN
+    v_referrer_id := (NEW.raw_user_meta_data->>'referido_por')::UUID;
+    IF v_referrer_id IS NOT NULL THEN
+      IF EXISTS (SELECT 1 FROM public.profiles WHERE id = v_referrer_id) THEN
+        INSERT INTO public.referrals (referrer_id, referred_id)
+        VALUES (v_referrer_id, NEW.id);
+        PERFORM public.crear_cupones_referido(v_referrer_id, NEW.id);
+      END IF;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
+
   RETURN NEW;
 END;
 $$;
@@ -126,14 +219,18 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 9. HABILITAR ROW LEVEL SECURITY
+-- 13. HABILITAR ROW LEVEL SECURITY
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.weekly_slots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blocked_dates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.beats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
 
--- 10. POLÍTICAS RLS
+-- 14. POLÍTICAS RLS
 
 -- profiles: el usuario ve/edita su propio perfil, admin ve todo
 DROP POLICY IF EXISTS "profiles_select_self_or_admin" ON public.profiles;
@@ -187,7 +284,56 @@ DROP POLICY IF EXISTS "beats_all_admin" ON public.beats;
 CREATE POLICY "beats_all_admin" ON public.beats
   FOR ALL USING (true) WITH CHECK (true);
 
--- 11. FUNCIÓN: crear primer admin (solo ejecutar 1 vez tras registrarse)
+-- referrals: solo admin puede ver el historial
+DROP POLICY IF EXISTS "referrals_select_admin" ON public.referrals;
+CREATE POLICY "referrals_select_admin" ON public.referrals
+  FOR SELECT USING (public.is_admin());
+
+DROP POLICY IF EXISTS "referrals_insert_trigger" ON public.referrals;
+CREATE POLICY "referrals_insert_trigger" ON public.referrals
+  FOR INSERT WITH CHECK (true);
+
+-- coupons: usuarios ven solo activos + asignados a ellos o globales
+DROP POLICY IF EXISTS "coupons_select_own" ON public.coupons;
+CREATE POLICY "coupons_select_own" ON public.coupons
+  FOR SELECT
+  USING (
+    estado = 'activo'
+    AND (asignado_a IS NULL OR asignado_a = auth.uid())
+    AND (fecha_expiracion IS NULL OR fecha_expiracion > now())
+  );
+
+DROP POLICY IF EXISTS "coupons_all_admin" ON public.coupons;
+CREATE POLICY "coupons_all_admin" ON public.coupons
+  FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- user_coupons: usuario ve sus propias asignaciones
+DROP POLICY IF EXISTS "user_coupons_select_own" ON public.user_coupons;
+CREATE POLICY "user_coupons_select_own" ON public.user_coupons
+  FOR SELECT USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "user_coupons_all_admin" ON public.user_coupons;
+CREATE POLICY "user_coupons_all_admin" ON public.user_coupons
+  FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "user_coupons_insert_system" ON public.user_coupons;
+CREATE POLICY "user_coupons_insert_system" ON public.user_coupons
+  FOR INSERT WITH CHECK (true);
+
+-- app_config: lectura pública, solo admin modifica
+DROP POLICY IF EXISTS "app_config_select_public" ON public.app_config;
+CREATE POLICY "app_config_select_public" ON public.app_config
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "app_config_all_admin" ON public.app_config;
+CREATE POLICY "app_config_all_admin" ON public.app_config
+  FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- 15. FUNCIÓN: crear primer admin (solo ejecutar 1 vez tras registrarse)
 CREATE OR REPLACE FUNCTION public.asignar_admin(target_email TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql SECURITY DEFINER
@@ -212,3 +358,17 @@ REVOKE EXECUTE ON FUNCTION public.asignar_admin FROM anon, authenticated;
 -- 2026-06-16: Add orden column for manual beat reordering
 -- ALTER TABLE public.beats ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
 -- Luego: UPDATE beats SET orden = sub.rn FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC) - 1 AS rn FROM beats) sub WHERE beats.id = sub.id;
+--
+-- 2026-06-22: Sistema de Referidos y Cupones
+-- Ejecutar migration_referidos_cupones.sql en el SQL Editor de Supabase para añadir:
+--   - Tabla referrals
+--   - Tabla coupons
+--   - Tabla user_coupons
+--   - Función crear_cupones_referido()
+--   - handle_new_user() actualizado (detección de referidos)
+--   - RLS policies para las nuevas tablas
+--
+-- 2026-06-22: Checkout y Tasa de Cambio
+-- Ejecutar migration_checkout.sql en el SQL Editor de Supabase para añadir:
+--   - Tabla app_config (tasa de cambio Bs/USD)
+--   - RLS policies para app_config

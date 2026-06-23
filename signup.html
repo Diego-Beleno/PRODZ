@@ -95,10 +95,14 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     errBox.style.display = 'none';
 
     try {
+        const referidoPor = localStorage.getItem('prodz_referido_por') || '';
+        const metadata = { nombre, apellido, telefono };
+        if (referidoPor) metadata.referido_por = referidoPor;
+
         const resultado = await Promise.race([
             supabase.auth.signUp({
                 email, password,
-                options: { data: { nombre, apellido, telefono } }
+                options: { data: metadata }
             }),
             new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000))
         ]);
@@ -114,6 +118,7 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
             return;
         }
 
+        localStorage.removeItem('prodz_referido_por');
         const pending = sessionStorage.getItem('pending_booking');
         window.location.href = pending ? 'index.html#reservas' : 'index.html';
     } catch (err) {

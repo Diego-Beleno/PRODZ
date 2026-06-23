@@ -1,3 +1,5 @@
+detectarReferidoURL();
+
 let audioCtx = null;
 function getAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -48,6 +50,8 @@ function renderCatalogo(beats) {
         card.setAttribute('data-escala', beat.escala || '');
         card.setAttribute('data-bpm', beat.bpm || '');
         card.setAttribute('data-vendido', beat.vendido ? 'true' : 'false');
+        card.setAttribute('data-precio', beat.precio || '0');
+        card.setAttribute('data-img', beat.image_url || '');
 
         const metaPartes = [
             beat.genero,
@@ -291,16 +295,26 @@ function cerrarIntro() {
 }
 
 document.addEventListener('click', (e) => {
-    const numeroTelefono = "584246603660";
     if (e.target.classList.contains('btn-license') && !e.target.classList.contains('sold')) {
         const card = e.target.closest('.beat-card');
-        const nombreBeat = card.getAttribute('data-name');
-        const texto = encodeURIComponent(`Hola! Estoy interesado/a en adquirir una licencia para el beat: ${nombreBeat}`);
-        window.open(`https://wa.me/${numeroTelefono}?text=${texto}`, '_blank');
+        if (card) {
+            const nombreBeat = card.getAttribute('data-name');
+            const img = card.getAttribute('data-img') || '';
+            window.location.href = 'checkout.html?item=' + encodeURIComponent(nombreBeat) + '&type=beat&img=' + encodeURIComponent(img);
+        }
     }
     if (e.target.classList.contains('service-btn-custom')) {
         const mensajeServicio = e.target.getAttribute('data-msg');
-        window.open(`https://wa.me/${numeroTelefono}?text=${encodeURIComponent(mensajeServicio)}`, '_blank');
+        window.location.href = 'checkout.html?item=Servicio+Personalizado&type=service&msg=' + encodeURIComponent(mensajeServicio);
+    }
+});
+
+// Player buy button (no parent .beat-card)
+document.querySelector('.player-buy')?.addEventListener('click', () => {
+    if (activeCard) {
+        const nombreBeat = activeCard.getAttribute('data-name');
+        const img = activeCard.getAttribute('data-img') || '';
+        window.location.href = 'checkout.html?item=' + encodeURIComponent(nombreBeat) + '&type=beat&img=' + encodeURIComponent(img);
     }
 });
 
@@ -407,7 +421,7 @@ async function renderAuthWidget() {
         const nombre = perfil ? perfil.nombre : 'Usuario';
         const esAdmin = perfil && perfil.role === 'admin';
         widget.innerHTML = `
-            <span class="user-nav-name">${nombre}</span>
+            <a href="mi-cuenta.html" class="user-nav-name" style="text-decoration:none;color:#888;">${nombre}</a>
             ${esAdmin ? '<a href="admin/index.html" class="user-nav-btn" style="border-color:gold;color:gold;">ADMIN</a>' : ''}
             <button class="user-nav-btn" id="logout-btn-nav">SALIR</button>
         `;

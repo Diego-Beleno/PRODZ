@@ -423,7 +423,21 @@ body {
     color: #666 !important;
     line-height: 1.6;
     text-align: left;
+    margin-bottom: 8px;
 }
+
+.rate-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 0.8rem;
+}
+.rate-row:last-child { border-bottom: none; }
+.rate-label { font-weight: 800; color: #ccc; min-width: 160px; }
+.rate-price { font-weight: 900; color: #4caf50; min-width: 50px; text-align: right; }
+.rate-desc { color: #666; flex: 1; }
 
 /* --- 8. AJUSTES RESPONSIVE INTELIGENTES --- */
 
@@ -779,14 +793,6 @@ body {
     transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
-}
-
-.slot-chip::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
-    pointer-events: none;
 }
 
 .slot-chip:hover {

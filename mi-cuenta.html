@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta | Prodz</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .mc-wrapper { min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
+        .mc-card { background: rgba(17,17,17,0.8); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; width: 100%; max-width: 560px; padding: 40px 30px; backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .mc-header { text-align: center; margin-bottom: 32px; }
+        .mc-header .auth-logo { height: 36px; margin-bottom: 16px; }
+        .mc-header h1 { font-size: 1.3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
+        .mc-section { margin-bottom: 36px; }
+        .mc-section-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .mc-referral-box { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; display: flex; gap: 10px; align-items: center; }
+        .mc-referral-box input { flex: 1; background: transparent; border: none; color: #888; font-size: 0.75rem; font-family: inherit; outline: none; padding: 8px 0; }
+        .mc-copy-btn { background: transparent; color: #888; border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; display: flex; align-items: center; justify-content: center; }
+        .mc-copy-btn:hover { border-color: white; color: white; }
+        .mc-copy-btn.copied { border-color: #4caf50; }
+        .mc-empty { color: #444; font-size: 0.8rem; text-align: center; padding: 20px; }
+        .coupon-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .coupon-card-code { font-size: 1rem; font-weight: 900; letter-spacing: 2px; color: #4caf50; }
+        .coupon-card-detail { font-size: 0.7rem; color: #666; margin-top: 4px; }
+        .coupon-card-right { text-align: right; flex-shrink: 0; }
+        .coupon-card-value { font-size: 1.3rem; font-weight: 900; color: white; }
+        .coupon-card-exp { font-size: 0.6rem; color: #555; margin-top: 2px; }
+        .mc-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .mc-actions a { flex: 1; text-align: center; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; transition: all 0.3s ease; }
+        .mc-btn-home { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.08); }
+        .mc-btn-home:hover { background: rgba(255,255,255,0.1); }
+        .mc-btn-logout { background: rgba(255,50,50,0.1); color: #ff5555; border: 1px solid rgba(255,50,50,0.2); cursor: pointer; font-family: inherit; }
+        .mc-btn-logout:hover { background: rgba(255,50,50,0.2); }
+        .mc-loading { text-align: center; padding: 60px 0; color: #555; font-size: 0.8rem; letter-spacing: 1px; }
+        @media (max-width: 480px) {
+            .mc-card { padding: 24px 16px; }
+            .mc-referral-box { flex-direction: column; }
+            .mc-referral-box input { width: 100%; font-size: 0.65rem; }
+            .mc-copy-btn { width: 100%; text-align: center; }
+            .coupon-card { flex-direction: column; text-align: center; }
+            .coupon-card-right { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div style="position:fixed;inset:0;background:radial-gradient(circle at 50% 0%,#ffffff18 0%,#050505 70%);pointer-events:none;z-index:0;"></div>
+
+<div class="mc-wrapper" style="position:relative;z-index:1;">
+    <div class="mc-card" id="mc-card">
+        <div class="mc-loading" id="mc-loading">CARGANDO...</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const user = session.user;
+    const perfil = await getPerfilUsuario(user.id);
+    if (!perfil) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const nombreCompleto = perfil.nombre + ' ' + (perfil.apellido || '');
+    const referralUrl = window.location.origin + window.location.pathname.replace('mi-cuenta.html', '') + '?ref=' + user.id;
+
+    const cupones = await getCuponesUsuario(user.id);
+
+    const card = document.getElementById('mc-card');
+    card.innerHTML = `
+        <div class="mc-header">
+            <a href="index.html"><img src="assets/images/Prodz Logo.png" alt="Prodz" class="auth-logo"></a>
+            <h1>Mi Cuenta</h1>
+            <p style="font-size:0.75rem;color:#555;margin-top:6px;letter-spacing:1px;">${nombreCompleto}</p>
+        </div>
+
+        <div class="mc-section">
+            <div class="mc-section-title">Tu Link de Referido</div>
+            <p style="font-size:0.7rem;color:#666;margin-bottom:12px;letter-spacing:0.5px;line-height:1.5;">
+                Invita a tus amigos y cuando se registren, <strong style="color:white;">ambos ganan $5 USD</strong> en cupones.
+            </p>
+            <div class="mc-referral-box">
+                <input type="text" id="referral-link-input" value="${referralUrl}" readonly>
+                <button class="mc-copy-btn" id="copy-referral-btn" title="Copiar enlace"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+            </div>
+        </div>
+
+        <div class="mc-section">
+            <div class="mc-section-title">Mis Cupones Disponibles</div>
+            ${cupones.length === 0
+                ? '<div class="mc-empty">No tienes cupones activos por el momento.</div>'
+                : cupones.map(uc => {
+                    const c = uc.coupon;
+                    const valorStr = c.tipo_descuento === 'porcentaje' ? c.valor + '%' : '$' + parseFloat(c.valor).toFixed(2) + ' USD';
+                    const expStr = c.fecha_expiracion ? new Date(c.fecha_expiracion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'Sin vencimiento';
+                    const usosStr = 'Usos: ' + uc.usos_actuales + '/' + c.max_usos_por_usuario;
+                    return '<div class="coupon-card">' +
+                        '<div><div class="coupon-card-code">' + c.codigo + '</div><div class="coupon-card-detail">' + usosStr + '</div></div>' +
+                        '<div class="coupon-card-right"><div class="coupon-card-value">' + valorStr + '</div><div class="coupon-card-exp">Vence: ' + expStr + '</div></div>' +
+                    '</div>';
+                }).join('')
+            }
+        </div>
+
+        <div class="mc-actions">
+            <a href="index.html" class="mc-btn-home">← Volver</a>
+            <button class="mc-btn-logout" id="mc-logout-btn">Cerrar Sesión</button>
+        </div>
+    `;
+
+    document.getElementById('copy-referral-btn').addEventListener('click', () => {
+        const input = document.getElementById('referral-link-input');
+        const btn = document.getElementById('copy-referral-btn');
+        const checkSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        const copySvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).then(() => {
+            btn.innerHTML = checkSvg;
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = copySvg;
+                btn.classList.remove('copied');
+            }, 2000);
+        }).catch(() => {
+            document.execCommand('copy');
+            btn.innerHTML = checkSvg;
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = copySvg;
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    });
+
+    document.getElementById('mc-logout-btn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+    });
+})();
+</script>
+</body>
+</html>
