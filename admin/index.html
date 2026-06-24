@@ -7,39 +7,242 @@
     <link rel="stylesheet" href="../style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Error handler global — captura todo y permite copiar -->
+    <!-- Error handler global — captura todo con detalle exacto -->
     <script>
-    window.addEventListener('error', function(e) {
-        mostrarError(e.error || e.message || 'Error desconocido');
-    });
-    window.addEventListener('unhandledrejection', function(e) {
-        mostrarError(e.reason || 'Promise rechazada');
-    });
-    function mostrarError(err) {
-        var msg = (err && (err.stack || err.message || err.toString())) || 'Error desconocido';
-        var el = document.createElement('div');
-        el.id = 'admin-error-display';
-        el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999999;display:flex;justify-content:center;align-items:center;padding:40px;';
-        var inner = document.createElement('div');
-        inner.style.cssText = 'background:#1a1a1a;border:1px solid #ff4444;border-radius:12px;padding:30px;max-width:600px;width:100%;max-height:80vh;overflow:auto;';
-        inner.innerHTML = '<h2 style="color:#ff4444;font-size:1.1rem;margin-bottom:16px;">ERROR</h2><pre id="admin-error-msg" style="background:#0a0a0a;padding:16px;border-radius:8px;font-size:0.75rem;color:#ccc;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;"></pre><div style="display:flex;gap:12px;margin-top:20px;"><button id="admin-error-copy" style="flex:1;padding:12px;background:white;color:black;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.8rem;">COPIAR ERROR</button><button onclick="location.reload()" style="flex:1;padding:12px;background:transparent;border:1px solid #444;color:white;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.8rem;">RECARGAR</button></div>';
-        el.appendChild(inner);
-        document.documentElement.appendChild(el);
-        document.getElementById('admin-error-msg').textContent = msg;
-        document.getElementById('admin-error-copy').onclick = function() {
-            var t = document.createElement('textarea');
-            t.value = msg;
-            document.body.appendChild(t);
-            t.select();
-            document.execCommand('copy');
-            t.remove();
-            this.textContent = 'Copiado';
+    (function() {
+        // ── Utilidad: serializar error a string legible ──
+        function serializarError(err, extra) {
+            var lines = [];
+            var ts = new Date().toISOString();
+
+            lines.push('========================================');
+            lines.push(' ERROR — ' + ts);
+            lines.push(' URL: ' + (window.location.href || '—'));
+            lines.push(' User-Agent: ' + (navigator.userAgent || '—'));
+            lines.push('========================================');
+
+            if (extra && extra.filename) {
+                lines.push(' Origen: ' + extra.filename + ':' + extra.lineno + ':' + extra.colno);
+            }
+
+            if (!err) {
+                lines.push('\n[Error vacio / null / undefined]');
+                return lines.join('\n');
+            }
+
+            // Extraer nombre del error
+            var name = err.name || '';
+            var message = err.message || '';
+            var stack = err.stack || '';
+            var errorCode = err.code !== undefined ? String(err.code) : null;
+
+            // DOMException tiene name="SyntaxError" etc.
+            // TypeError, ReferenceError, etc. tienen su name propio
+            lines.push('\n Tipo: ' + (name || typeof err));
+            if (errorCode && errorCode !== '0') lines.push(' Codigo: ' + errorCode);
+
+            if (message) {
+                lines.push('\n Mensaje:');
+                lines.push('   ' + message);
+            }
+
+            if (stack) {
+                lines.push('\n Stack Trace:');
+                // Partir el stack en lineas y sangrar
+                var stackLines = stack.split('\n');
+                for (var si = 0; si < stackLines.length; si++) {
+                    var sl = stackLines[si].trim();
+                    if (sl) lines.push('   ' + sl);
+                }
+            }
+
+            // Para DOMException, el name puede ser "SyntaxError" pero message tiene el detalle real
+            if (name && message && stack) {
+                lines.push('\n Resumen: ' + name + ': ' + message);
+            }
+
+            // Si es un objeto plano (no Error), mostrar JSON
+            var esDOMException = typeof DOMException !== 'undefined' && err instanceof DOMException;
+            if (!(err instanceof Error) && !esDOMException) {
+                try {
+                    lines.push('\n Objeto plano:');
+                    lines.push('   ' + JSON.stringify(err, null, 2).replace(/\n/g, '\n   '));
+                } catch(_) {}
+            }
+
+            // Causa (para errores encadenados)
+            if (err.cause) {
+                lines.push('\n Causa:');
+                var causa = serializarError(err.cause, {}).split('\n');
+                for (var ci = 0; ci < causa.length; ci++) {
+                    lines.push('   ' + causa[ci]);
+                }
+            }
+
+            lines.push('\n========================================');
+            return lines.join('\n');
+        }
+
+        // ── Construir UI del overlay de error ──
+        function crearOverlayError(textoCompleto, errObj) {
+            var oldEl = document.getElementById('admin-error-display');
+            if (oldEl) oldEl.remove();
+
+            var el = document.createElement('div');
+            el.id = 'admin-error-display';
+            el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999999;display:flex;justify-content:center;align-items:center;padding:20px;';
+
+            var card = document.createElement('div');
+            card.style.cssText = 'background:#1a1a1a;border:1px solid #ff4444;border-radius:14px;padding:28px;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column;';
+
+            // Header
+            var hdr = document.createElement('div');
+            hdr.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;';
+            var icon = document.createElement('span');
+            icon.style.cssText = 'width:10px;height:10px;border-radius:50%;background:#ff4444;flex-shrink:0;display:inline-block;';
+            var title = document.createElement('span');
+            title.style.cssText = 'color:#ff4444;font-size:0.85rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;';
+            title.textContent = 'Error — Revisa la Consola (F12) para mas detalle';
+            hdr.appendChild(icon);
+            hdr.appendChild(title);
+            card.appendChild(hdr);
+
+            // Area de texto con el error (pre, scrolleable)
+            var pre = document.createElement('pre');
+            pre.id = 'admin-error-msg';
+            pre.style.cssText = 'background:#0a0a0a;padding:16px;border-radius:10px;font-size:0.72rem;font-family:monospace;color:#e0e0e0;white-space:pre-wrap;word-break:break-all;overflow:auto;flex:1;min-height:200px;max-height:50vh;border:1px solid rgba(255,255,255,0.03);line-height:1.6;';
+            pre.textContent = textoCompleto;
+            card.appendChild(pre);
+
+            // Botones
+            var btnRow = document.createElement('div');
+            btnRow.style.cssText = 'display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;';
+
+            var btnCopy = document.createElement('button');
+            btnCopy.id = 'admin-error-copy';
+            btnCopy.style.cssText = 'flex:1;min-width:120px;padding:12px 16px;background:white;color:black;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:0.78rem;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s ease;';
+            btnCopy.textContent = 'COPIAR ERROR';
+            btnCopy.onclick = function() {
+                var t = document.createElement('textarea');
+                t.value = textoCompleto;
+                document.body.appendChild(t);
+                t.select();
+                try { document.execCommand('copy'); } catch(_) { try { navigator.clipboard.writeText(textoCompleto); } catch(_2) {} }
+                t.remove();
+                btnCopy.textContent = '¡COPIADO!';
+                btnCopy.style.background = '#4caf50';
+                btnCopy.style.color = 'white';
+                setTimeout(function() {
+                    btnCopy.textContent = 'COPIAR ERROR';
+                    btnCopy.style.background = 'white';
+                    btnCopy.style.color = 'black';
+                }, 2000);
+            };
+
+            var btnReload = document.createElement('button');
+            btnReload.style.cssText = 'min-width:120px;padding:12px 16px;background:transparent;border:1px solid #444;color:#ccc;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.78rem;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s ease;';
+            btnReload.textContent = 'RECARGAR';
+            btnReload.onclick = function() { location.reload(); };
+
+            var btnConsole = document.createElement('button');
+            btnConsole.style.cssText = 'min-width:120px;padding:12px 16px;background:transparent;border:1px solid rgba(100,200,255,0.2);color:#64c8ff;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.78rem;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s ease;';
+            btnConsole.textContent = 'ABRIR CONSOLA (F12)';
+            btnConsole.onclick = function() {
+                // No podemos abrir DevTools programaticamente,
+                // pero si mostrar instrucciones en consola
+                console.log('=== ERROR REPORT ===');
+                console.log(textoCompleto);
+                console.log('=== Original error object ===');
+                console.log(errObj);
+                alert('Abre DevTools con F12 y ve a la consola (Console) para ver el error completo con objeto original.');
+            };
+
+            btnRow.appendChild(btnCopy);
+            btnRow.appendChild(btnReload);
+            btnRow.appendChild(btnConsole);
+            card.appendChild(btnRow);
+
+            el.appendChild(card);
+            document.documentElement.appendChild(el);
+
+            // Siempre loggear a consola tambien
+            console.error('=== ERROR GLOBAL ===');
+            console.error(textoCompleto);
+            console.error('=== Objeto original ===');
+            console.error(errObj);
+        }
+
+        // ── Handler de error de script ──
+        window.addEventListener('error', function(e) {
+            // e.error: el objeto Error
+            // e.message: mensaje
+            // e.filename: archivo
+            // e.lineno: linea
+            // e.colno: columna
+            var errObj = e.error || null;
+            var extra = {
+                filename: e.filename || null,
+                lineno: e.lineno || null,
+                colno: e.colno || null
+            };
+            var texto = serializarError(errObj, extra);
+            crearOverlayError(texto, errObj || e);
+        });
+
+        // ── Handler de Promise rechazada ──
+        window.addEventListener('unhandledrejection', function(e) {
+            var reason = e.reason;
+            var extra = {
+                filename: null,
+                lineno: null,
+                colno: null
+            };
+            var lines = [];
+            lines.push('========================================');
+            lines.push(' PROMESA RECHAZADA (Unhandled Rejection)');
+            lines.push(' Timestamp: ' + new Date().toISOString());
+            lines.push(' URL: ' + (window.location.href || '—'));
+            lines.push('========================================');
+
+            if (!reason) {
+                lines.push('\n[Promise rechazada sin razon (undefined/null)]');
+            } else if (reason instanceof Error || reason instanceof DOMException) {
+                lines.push('\n Tipo: ' + (reason.name || typeof reason));
+                if (reason.message) lines.push('\n Mensaje:\n   ' + reason.message);
+                if (reason.stack) {
+                    lines.push('\n Stack Trace:');
+                    var sl = reason.stack.split('\n');
+                    for (var si = 0; si < sl.length; si++) {
+                        var s = sl[si].trim();
+                        if (s) lines.push('   ' + s);
+                    }
+                }
+            } else {
+                lines.push('\n Tipo: ' + typeof reason);
+                try {
+                    var json = JSON.stringify(reason, null, 2);
+                    lines.push('\n Contenido:\n   ' + json.replace(/\n/g, '\n   '));
+                } catch(_) {
+                    lines.push('\n [No se pudo serializar]');
+                }
+            }
+
+            lines.push('\n========================================');
+            var texto = lines.join('\n');
+            crearOverlayError(texto, reason);
+        });
+
+        // ── Exponer globalmente por si alguien quiere llamarlo manual ──
+        window.mostrarError = function(err) {
+            var texto = serializarError(err, { filename: null, lineno: null, colno: null });
+            crearOverlayError(texto, err);
         };
-    }
+    })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     <script src="../supabase-config.js"></script>
+    <script src="video-renderer.js"></script>
 
     <style>
         .drop-zone {
@@ -307,7 +510,7 @@
 
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                             <div class="form-group">
-                                <label class="form-label">Imagen</label>
+                                <label class="form-label" for="beat-image-input">Imagen</label>
                                 <div class="drop-zone" id="image-drop-zone" style="padding:20px;">
                                     <div class="dz-placeholder">
                                         <div style="font-size:0.75rem;">Suelta una imagen o haz clic</div>
@@ -322,7 +525,7 @@
                             </div>
                             <div style="display:flex;flex-direction:column;gap:12px;justify-content:flex-end;">
                                 <div class="form-group">
-                                    <label class="form-label">Color</label>
+                                    <label class="form-label" for="beat-color-picker">Color</label>
                                     <input type="color" id="beat-color-picker" class="form-input" value="#ffffff" style="height:48px;padding:4px;">
                                 </div>
                                 <div class="toggle-wrap" style="padding:0;">
@@ -338,7 +541,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Audio (MP3, WAV)</label>
+                            <label class="form-label" for="beat-audio-input">Audio (MP3, WAV)</label>
                             <div class="drop-zone" id="audio-drop-zone" style="padding:16px 20px;">
                                 <div class="dz-placeholder">
                                     <div style="font-size:0.75rem;">Suelta un audio o haz clic</div>
@@ -420,7 +623,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Asignar a Usuario (UUID — opcional)</label>
+                            <label class="form-label" for="cup-asignado">Asignar a Usuario (UUID — opcional)</label>
                             <input type="text" id="cup-asignado" class="form-input" placeholder="Dejar vacío para cupón global">
                         </div>
                         <div class="toggle-wrap">
@@ -500,6 +703,66 @@
                 </div>
                 <button type="submit" class="booking-action-btn">Guardar</button>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Generador de Video -->
+<div id="modal-video" class="modal-overlay">
+    <div class="modal-card modal-video-card">
+        <button class="modal-close" onclick="cerrarModalVideo()">&times;</button>
+        <h3 class="modal-title">Generar Video</h3>
+
+        <!-- Fase 1: Configuración -->
+        <div id="video-step-config">
+            <div class="modal-body">
+                <div class="video-beat-info" id="video-beat-info">
+                    <img id="video-beat-cover" src="" alt="" class="video-beat-cover-sm">
+                    <div>
+                        <div class="video-beat-name" id="video-beat-name">—</div>
+                        <div class="video-beat-meta" id="video-beat-meta">—</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <span class="form-label">Formato de salida</span>
+                    <div id="video-format-options" class="video-format-grid"></div>
+                    <div class="form-hint" id="video-format-hint">Se muestran solo los formatos que tu navegador soporta.</div>
+                </div>
+
+                <div id="video-upload-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                <button class="booking-action-btn" id="video-generate-btn" onclick="iniciarRenderVideo()">GENERAR VIDEO</button>
+            </div>
+        </div>
+
+        <!-- Fase 2: Progreso -->
+        <div id="video-step-progress" style="display:none;">
+            <div class="modal-body" style="text-align:center;">
+                <div class="video-preview-container">
+                    <canvas id="video-render-canvas" class="video-preview-canvas"></canvas>
+                </div>
+                <div class="video-progress-bar-container">
+                    <div class="video-progress-bar" id="video-progress-bar"></div>
+                </div>
+                <div class="video-progress-text" id="video-progress-text">0%</div>
+                <div class="video-progress-time" id="video-progress-time">—</div>
+                <button class="video-abort-btn" onclick="abortarRenderVideo()">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- Fase 3: Completo -->
+        <div id="video-step-done" style="display:none;">
+            <div class="modal-body" style="text-align:center;">
+                <div class="video-checkmark">OK</div>
+                <div class="video-done-text">Video generado exitosamente</div>
+                <div class="video-done-info" id="video-done-info">—</div>
+                <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;justify-content:center;">
+                    <button class="booking-action-btn" onclick="descargarVideo()" style="flex:1;min-width:160px;">DESCARGAR</button>
+                    <button class="booking-action-btn" id="video-publish-btn" onclick="publicarVideo()" style="flex:1;min-width:160px;background:#4caf50;border-color:#4caf50;">PUBLICAR</button>
+                </div>
+                <div id="video-publish-result" style="margin-top:12px;font-size:0.78rem;color:#4caf50;display:none;"></div>
+                <button class="video-abort-btn" onclick="cerrarModalVideo()" style="margin-top:16px;">Cerrar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -870,6 +1133,7 @@ async function cargarBeatsDB() {
             '</div>' +
             '<div class="beat-admin-actions">' +
                 '<button class="btn-action approve" onclick="editarBeat(\'' + b.id + '\')">Editar</button>' +
+                '<button class="btn-action video" onclick="abrirModalVideo(' + b.id + ')" style="background:rgba(100,200,255,0.1);border-color:rgba(100,200,255,0.2);">Video</button>' +
                 '<button class="btn-action cancel" onclick="eliminarBeat(\'' + b.id + '\')">Eliminar</button>' +
             '</div>' +
         '</div>';
@@ -956,6 +1220,262 @@ async function guardarOrden() {
 }
 
 
+/* ── Video Generator ───────────────────────────────────── */
+var _videoRenderer = null;
+var _videoBeatData = null;
+var _videoBlob = null;
+var _videoFormat = null;
+
+function abrirModalVideo(beatId) {
+    cerrarModalVideo();
+    _videoBeatData = null;
+    _videoBlob = null;
+    _videoFormat = null;
+
+    var modal = $('modal-video');
+    if (!modal) return;
+
+    // Resetear vistas
+    $('video-step-config').style.display = 'block';
+    $('video-step-progress').style.display = 'none';
+    $('video-step-done').style.display = 'none';
+    $('video-upload-error').style.display = 'none';
+    $('video-generate-btn').disabled = false;
+    $('video-generate-btn').textContent = 'GENERAR VIDEO';
+
+    // Detectar formatos soportados
+    var supported = detectSupportedFormats();
+    var formatContainer = $('video-format-options');
+    formatContainer.innerHTML = '';
+
+    if (!supported.length) {
+        formatContainer.innerHTML = '<div style="color:#ff6b6b;">Tu navegador no soporta grabación de video.</div>';
+        $('video-generate-btn').style.display = 'none';
+        modal.classList.add('active');
+        return;
+    }
+
+    // Mostrar radios - MP4 primero si existe
+    supported.sort(function(a,b) {
+        if (a.ext === 'mp4' && b.ext !== 'mp4') return -1;
+        if (a.ext !== 'mp4' && b.ext === 'mp4') return 1;
+        return 0;
+    });
+
+    supported.forEach(function(f, i) {
+        var label = document.createElement('label');
+        label.className = 'video-format-option' + (i === 0 ? ' selected' : '');
+        if (i === 0) label.classList.add('selected');
+        var input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'video-format';
+        input.value = f.mime;
+        input.dataset.ext = f.ext;
+        if (i === 0) input.checked = true;
+
+        var span = document.createElement('span');
+        span.className = 'video-format-label';
+        span.textContent = f.label;
+
+        label.appendChild(input);
+        label.appendChild(span);
+
+        label.addEventListener('click', function() {
+            formatContainer.querySelectorAll('.video-format-option').forEach(function(el) {
+                el.classList.remove('selected');
+            });
+            label.classList.add('selected');
+        });
+
+        formatContainer.appendChild(label);
+    });
+
+    // Cargar datos del beat
+    safeQuery(function() {
+        return supabase.from('beats').select('*').eq('id', beatId).single();
+    }).then(function(res) {
+        var b = res.data;
+        if (!b) { $('video-upload-error').textContent = 'Beat no encontrado.'; $('video-upload-error').style.display = 'block'; return; }
+        _videoBeatData = b;
+        $('video-beat-name').textContent = b.titulo;
+        $('video-beat-meta').textContent = (b.bpm || '—') + ' BPM · ' + (b.genero || '—') + ' · $' + (b.precio || '0');
+        $('video-beat-cover').src = b.image_url || '../assets/images/asset.webp';
+        modal.classList.add('active');
+    });
+}
+
+function cerrarModalVideo() {
+    abortarRenderVideo();
+    _videoBeatData = null;
+    _videoBlob = null;
+    _videoFormat = null;
+    $('modal-video').classList.remove('active');
+}
+
+function getSelectedFormat() {
+    var checked = document.querySelector('input[name="video-format"]:checked');
+    if (!checked) return null;
+    return {
+        mime: checked.value,
+        ext: checked.dataset.ext
+    };
+}
+
+function iniciarRenderVideo() {
+    try {
+        var beat = _videoBeatData;
+        if (!beat) return;
+        var fmt = getSelectedFormat();
+        if (!fmt) { $('video-upload-error').textContent = 'Selecciona un formato.'; $('video-upload-error').style.display = 'block'; return; }
+
+        // Cambiar a vista de progreso
+        $('video-step-config').style.display = 'none';
+        $('video-step-progress').style.display = 'block';
+        $('video-step-done').style.display = 'none';
+        $('video-upload-error').style.display = 'none';
+
+        var canvas = $('video-render-canvas');
+        if (!canvas) throw new Error('No se encontro el canvas de preview (#video-render-canvas). Revisa que el modal este bien renderizado.');
+        canvas.width = 360;
+        canvas.height = 640;
+
+        var renderCanvas = document.createElement('canvas');
+        renderCanvas.width = 1080;
+        renderCanvas.height = 1920;
+
+        var previewCtx = canvas.getContext('2d');
+        if (!previewCtx) throw new Error('No se pudo obtener el contexto 2D del canvas de preview.');
+
+        if (typeof VideoRenderer !== 'function') throw new Error('VideoRenderer no esta definido. El archivo video-renderer.js no se cargo correctamente.');
+
+        _videoRenderer = new VideoRenderer({
+            beat: beat,
+            format: fmt,
+            canvas: renderCanvas,
+            onProgress: function(info) {
+                try {
+                    var pct = info.progress;
+                    $('video-progress-bar').style.width = Math.round(pct * 100) + '%';
+                    $('video-progress-text').textContent = Math.round(pct * 100) + '%';
+                    previewCtx.drawImage(renderCanvas, 0, 0, 360, 640);
+                    var elapsedSec = Math.floor(info.elapsed / 1000);
+                    var totalSec = Math.floor(info.total / 1000);
+                    $('video-progress-time').textContent = formatTime(elapsedSec) + ' / ' + formatTime(totalSec);
+                } catch(progErr) {
+                    console.warn('Error en onProgress:', progErr);
+                }
+            },
+            onComplete: function(blob, format) {
+                try {
+                    _videoBlob = blob;
+                    _videoFormat = format;
+                    _videoRenderer = null;
+                    $('video-step-progress').style.display = 'none';
+                    $('video-step-done').style.display = 'block';
+                    var sizeMB = (blob.size / 1024 / 1024).toFixed(1);
+                    $('video-done-info').textContent = format.label + ' · ' + sizeMB + ' MB';
+                } catch(compErr) {
+                    console.error('Error en onComplete:', compErr);
+                    mostrarError(compErr);
+                }
+            },
+            onError: function(err) {
+                try {
+                    _videoRenderer = null;
+                    $('video-step-progress').style.display = 'none';
+                    $('video-step-config').style.display = 'block';
+                    var msg = 'Error: ' + ((err && (err.message || err.stack || err.toString())) || 'desconocido');
+                    $('video-upload-error').textContent = msg;
+                    $('video-upload-error').style.display = 'block';
+                    $('video-generate-btn').disabled = false;
+                    $('video-generate-btn').textContent = 'GENERAR VIDEO';
+                    console.error('VideoRenderer error:', err);
+                } catch(errErr) {
+                    console.error('Error EN el onError:', errErr);
+                    mostrarError(err);
+                }
+            }
+        });
+
+        _videoRenderer.render();
+    } catch(initErr) {
+        console.error('Error en iniciarRenderVideo:', initErr);
+        mostrarError(initErr);
+        $('video-step-progress').style.display = 'none';
+        $('video-step-config').style.display = 'block';
+        $('video-upload-error').textContent = 'Error al iniciar: ' + (initErr.message || initErr);
+        $('video-upload-error').style.display = 'block';
+    }
+}
+
+function abortarRenderVideo() {
+    if (_videoRenderer) {
+        _videoRenderer.abort();
+        _videoRenderer = null;
+    }
+}
+
+function descargarVideo() {
+    if (!_videoBlob) return;
+    var url = URL.createObjectURL(_videoBlob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'PRODZ_' + (_videoBeatData ? _videoBeatData.titulo.replace(/\s+/g, '_') : 'beat') + '.' + (_videoFormat ? _videoFormat.ext : 'webm');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+async function publicarVideo() {
+    if (!_videoBlob || !_videoBeatData || !_videoFormat) return;
+    var btn = $('video-publish-btn');
+    var result = $('video-publish-result');
+    btn.disabled = true;
+    btn.textContent = 'Publicando...';
+    result.style.display = 'none';
+
+    try {
+        var ext = _videoFormat.ext;
+        var filename = Date.now() + '_' + _videoBeatData.titulo.replace(/[^a-zA-Z0-9_]/g, '_') + '.' + ext;
+        var path = 'public/videos/' + filename;
+
+        var contentType = _videoFormat.mime.split(';')[0];
+        var { error: uploadErr } = await supabase.storage.from(BEATS_BUCKET).upload(path, _videoBlob, {
+            contentType: contentType,
+            upsert: false
+        });
+        if (uploadErr) throw new Error('Error subiendo video: ' + uploadErr.message);
+
+        var videoUrl = supabase.storage.from(BEATS_BUCKET).getPublicUrl(path).data.publicUrl;
+
+        // Guardar en video_generations
+        var { error: genErr } = await supabase.from('video_generations').insert([{
+            beat_id: _videoBeatData.id,
+            estado: 'listo',
+            video_url: videoUrl,
+            formato: ext,
+            tamaño_bytes: _videoBlob.size
+        }]);
+        if (genErr) console.error('Error guardando generación:', genErr);
+
+        // Actualizar beat con video_url
+        var { error: updErr } = await supabase.from('beats').update({ video_url: videoUrl }).eq('id', _videoBeatData.id);
+        if (updErr) console.error('Error actualizando beat:', updErr);
+
+        _videoBeatData.video_url = videoUrl;
+        result.textContent = 'Publicado en Supabase Storage';
+        result.style.display = 'block';
+        btn.textContent = 'PUBLICADO';
+    } catch (err) {
+        result.textContent = 'Error: ' + (err.message || err);
+        result.style.color = '#ff6b6b';
+        result.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'PUBLICAR';
+    }
+}
+
 async function eliminarBeat(id) {
     if (!confirm('Eliminar beat?')) return;
     await supabase.from('beats').delete().eq('id', id);
@@ -969,19 +1489,19 @@ async function editarBeat(id) {
     if (!b) return;
 
     var html = '<form id="beat-edit-form" style="display:flex;flex-direction:column;gap:16px;">';
-    html += '<div class="form-group"><label class="form-label">Titulo</label><input type="text" id="edit-titulo" class="form-input" value="' + esc(b.titulo) + '" required></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-titulo">Titulo</label><input type="text" id="edit-titulo" class="form-input" value="' + esc(b.titulo) + '" required></div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">';
-    html += '<div class="form-group"><label class="form-label">BPM</label><input type="number" id="edit-bpm" class="form-input" value="' + esc(b.bpm) + '"></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-bpm">BPM</label><input type="number" id="edit-bpm" class="form-input" value="' + esc(b.bpm) + '"></div>';
     var escalas = ['','C','Cm','C#','C#m','D','Dm','D#','D#m','E','Em','F','Fm','F#','F#m','G','Gm','G#','G#m','A','Am','A#','A#m','B','Bm'];
-    html += '<div class="form-group"><label class="form-label">Escala</label><select id="edit-escala" class="form-input">' + escalas.map(function(s){return '<option value="' + s + '"' + (b.escala === s ? ' selected' : '') + '>' + (s||'—') + '</option>'}).join('') + '</select></div>';
-    html += '<div class="form-group"><label class="form-label">Género</label><input type="text" id="edit-genero" class="form-input" value="' + esc(b.genero) + '" placeholder="Ej: Trap"></div>';
-    html += '<div class="form-group"><label class="form-label">Precio $</label><input type="number" step="0.01" id="edit-precio" class="form-input" value="' + esc(b.precio) + '"></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-escala">Escala</label><select id="edit-escala" class="form-input">' + escalas.map(function(s){return '<option value="' + s + '"' + (b.escala === s ? ' selected' : '') + '>' + (s||'—') + '</option>'}).join('') + '</select></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-genero">G\u00e9nero</label><input type="text" id="edit-genero" class="form-input" value="' + esc(b.genero) + '" placeholder="Ej: Trap"></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-precio">Precio $</label><input type="number" step="0.01" id="edit-precio" class="form-input" value="' + esc(b.precio) + '"></div>';
     html += '</div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
-    html += '<div class="form-group"><label class="form-label">Color</label><input type="color" id="edit-color" class="form-input" value="' + (b.color||'#ffffff') + '" style="height:48px;padding:4px;"></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-color">Color</label><input type="color" id="edit-color" class="form-input" value="' + (b.color||'#ffffff') + '" style="height:48px;padding:4px;"></div>';
     html += '<div><div class="toggle-wrap" style="padding:0;margin-top:20px;"><label class="toggle"><input type="checkbox" id="edit-featured" ' + (b.featured ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Destacado</div></div></div></div>';
     html += '</div>';
-    html += '<div class="form-group"><label class="form-label">Imagen de portada</label><div id="edit-image-drop-zone" class="drop-zone" style="padding:16px;"><div class="dz-placeholder" style="font-size:0.75rem;">Suelta una imagen o haz clic para cambiarla</div><div class="dz-preview"><img id="edit-image-preview" src="' + esc(b.image_url) + '" style="max-height:80px;border-radius:6px;"></div><input type="file" id="edit-image-input" accept="image/*" style="display:none"></div><div id="edit-image-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-image-input">Imagen de portada</label><div id="edit-image-drop-zone" class="drop-zone" style="padding:16px;"><div class="dz-placeholder" style="font-size:0.75rem;">Suelta una imagen o haz clic para cambiarla</div><div class="dz-preview"><img id="edit-image-preview" src="' + esc(b.image_url) + '" style="max-height:80px;border-radius:6px;"></div><input type="file" id="edit-image-input" accept="image/*" style="display:none"></div><div id="edit-image-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div></div>';
     html += '<div class="toggle-wrap" style="padding:0;"><label class="toggle"><input type="checkbox" id="edit-vendido" ' + (b.vendido ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Vendido</div></div></div>';
     html += '<div id="edit-beat-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div>';
     html += '<button type="submit" class="booking-action-btn">Guardar Cambios</button>';

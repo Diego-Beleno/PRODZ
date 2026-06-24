@@ -372,3 +372,36 @@ REVOKE EXECUTE ON FUNCTION public.asignar_admin FROM anon, authenticated;
 -- Ejecutar migration_checkout.sql en el SQL Editor de Supabase para añadir:
 --   - Tabla app_config (tasa de cambio Bs/USD)
 --   - RLS policies para app_config
+--
+-- 2026-06-23: Video Promocional Generator
+-- Ejecutar el siguiente bloque en el SQL Editor de Supabase:
+--
+-- ALTER TABLE public.beats ADD COLUMN IF NOT EXISTS video_url TEXT;
+--
+-- CREATE TABLE IF NOT EXISTS public.video_generations (
+--   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--   beat_id INTEGER NOT NULL REFERENCES public.beats(id) ON DELETE CASCADE,
+--   estado TEXT NOT NULL DEFAULT 'procesando' CHECK (estado IN ('procesando', 'listo', 'fallido')),
+--   video_url TEXT,
+--   formato TEXT DEFAULT 'webm',
+--   tamaño_bytes BIGINT,
+--   tiempo_render_ms INTEGER,
+--   created_at TIMESTAMPTZ DEFAULT now(),
+--   updated_at TIMESTAMPTZ DEFAULT now()
+-- );
+--
+-- ALTER TABLE public.video_generations ENABLE ROW LEVEL SECURITY;
+--
+-- DROP POLICY IF EXISTS "video_generations_all_admin" ON public.video_generations;
+-- CREATE POLICY "video_generations_all_admin" ON public.video_generations
+--   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+--
+-- CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+-- RETURNS TRIGGER AS $$
+-- BEGIN NEW.updated_at = now(); RETURN NEW;
+-- END; $$ LANGUAGE plpgsql;
+--
+-- DROP TRIGGER IF EXISTS set_video_generations_updated_at ON public.video_generations;
+-- CREATE TRIGGER set_video_generations_updated_at
+--   BEFORE UPDATE ON public.video_generations
+--   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

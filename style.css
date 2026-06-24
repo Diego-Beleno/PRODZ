@@ -421,23 +421,28 @@ body {
 .legal-item p {
     font-size: 0.8rem !important;
     color: #666 !important;
-    line-height: 1.6;
-    text-align: left;
+    line-height: 1.7;
+    text-align: justify;
     margin-bottom: 8px;
 }
 
-.rate-row {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    font-size: 0.8rem;
+.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.rate-table tr { border-bottom: 1px solid rgba(255,255,255,0.03); }
+.rate-table tr:last-child { border-bottom: none; }
+.rate-table td { padding: 10px 8px; vertical-align: top; }
+.rt-name { font-weight: 800; color: #ccc; white-space: nowrap; width: 1%; padding-right: 16px !important; }
+.rt-price { font-weight: 900; color: var(--accent-color); white-space: nowrap; width: 1%; text-align: right; padding-right: 16px !important; }
+.rt-desc { color: #666; }
+
+@media (max-width: 600px) {
+    .rate-table, .rate-table tbody, .rate-table tr, .rate-table td { display: block; }
+    .rate-table tr { padding: 10px 0; }
+    .rate-table td { padding: 2px 0; }
+    .rt-name { width: auto; }
+    .rt-price { width: auto; text-align: left; padding-right: 0 !important; }
+    .rt-desc { font-size: 0.75rem; }
 }
-.rate-row:last-child { border-bottom: none; }
-.rate-label { font-weight: 800; color: #ccc; min-width: 160px; }
-.rate-price { font-weight: 900; color: #4caf50; min-width: 50px; text-align: right; }
-.rate-desc { color: #666; flex: 1; }
 
 /* --- 8. AJUSTES RESPONSIVE INTELIGENTES --- */
 
@@ -944,6 +949,187 @@ body {
     .modal-body [style*="grid-template-columns"] {
         grid-template-columns: 1fr !important;
     }
+}
+
+/* ── Video Generator Modal ──────────────────────────────── */
+.modal-video-card {
+    max-width: 520px;
+}
+
+.video-beat-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+}
+
+.video-beat-cover-sm {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.video-beat-name {
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+.video-beat-meta {
+    font-size: 0.7rem;
+    color: #666;
+    margin-top: 3px;
+}
+
+.video-format-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.video-format-option {
+    flex: 1;
+    min-width: 90px;
+    text-align: center;
+    padding: 12px 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+}
+
+.video-format-option:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.15);
+}
+
+.video-format-option.selected {
+    background: rgba(100,200,255,0.08);
+    border-color: rgba(100,200,255,0.3);
+}
+
+.video-format-option input[type="radio"] {
+    display: none;
+}
+
+.video-format-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #aaa;
+    transition: color 0.25s ease;
+}
+
+.video-format-option.selected .video-format-label {
+    color: #fff;
+}
+
+.form-hint {
+    font-size: 0.65rem;
+    color: #555;
+    margin-top: 4px;
+}
+
+.video-preview-container {
+    width: 100%;
+    max-width: 270px;
+    margin: 0 auto 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: #000;
+    aspect-ratio: 9 / 16;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-preview-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.video-progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 12px 0 8px;
+}
+
+.video-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ff88, #00ccff);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.video-progress-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #00ff88;
+    margin-bottom: 4px;
+}
+
+.video-progress-time {
+    font-size: 0.7rem;
+    color: #555;
+}
+
+.video-abort-btn {
+    margin-top: 16px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #888;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.video-abort-btn:hover {
+    border-color: rgba(255,80,80,0.3);
+    color: #ff5555;
+}
+
+.video-checkmark {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(0,255,136,0.1);
+    border: 2px solid #00ff88;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #00ff88;
+    margin: 0 auto 16px;
+}
+
+.video-done-text {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.video-done-info {
+    font-size: 0.75rem;
+    color: #666;
 }
 
 /* Formulario Estilos */
