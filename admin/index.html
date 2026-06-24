@@ -421,8 +421,12 @@
                             <input type="date" id="bd-fecha" class="form-input" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">
-                                <input type="checkbox" id="bd-todo-dia" style="margin-right:8px;"> Todo el día
+                            <label class="toggle-wrap" style="padding:0;">
+                                <span class="toggle-label" style="font-size:0.75rem;">Todo el día</span>
+                                <label class="toggle">
+                                    <input type="checkbox" id="bd-todo-dia">
+                                    <span class="slider"></span>
+                                </label>
                             </label>
                         </div>
                         <div id="bd-horas-wrapper">
@@ -767,6 +771,26 @@
     </div>
 </div>
 
+<!-- ── Visual Preview (Spotify-style overlay) ── -->
+<div id="modal-visual-preview" class="visual-preview-root" onclick="if(event.target===this)cerrarVistaPrevia()">
+    <button class="visual-close" onclick="cerrarVistaPrevia()">&times;</button>
+    <div id="vp-bg" class="vp-bg"></div>
+    <div class="vp-overlay"></div>
+    <div class="vp-content">
+        <div class="vp-cover-wrapper">
+            <div class="vp-cover-glow" id="vp-glow"></div>
+            <img id="vp-cover" class="vp-cover-img" src="" alt="cover">
+        </div>
+        <div class="vp-title" id="vp-title">—</div>
+        <div class="vp-meta" id="vp-meta">—</div>
+        <canvas id="vp-spectrum" class="vp-spectrum"></canvas>
+        <div class="vp-progress-track">
+            <div class="vp-progress-bar" id="vp-progress-bar"></div>
+        </div>
+        <div class="vp-watermark">PRODZ</div>
+    </div>
+</div>
+
 <script>
 /* ── Utilidades ──────────────────────────────────────── */
 function $(id) { return document.getElementById(id); }
@@ -779,6 +803,14 @@ async function safeQuery(queryFn) {
 const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const WHATSAPP = "584246603660";
 const BEATS_BUCKET = 'beats-bucket';
+
+/* ── SVG Iconos ──────────────────────────────────────── */
+const ICON_EDIT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const ICON_PREVIEW = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_DELETE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+const ICON_APPROVE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+const ICON_RESCHEDULE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+const ICON_CANCEL = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
 /* ── WebP conversion ─────────────────────────────────── */
 function fileToWebPBlob(file) {
@@ -928,10 +960,10 @@ async function cargarBookings() {
             <td>${ini} – ${fin}</td>
             <td><span class="badge ${b.estado}">${b.estado}</span></td>
             <td><div class="action-btns">
-                ${b.estado === 'pendiente' ? `<button class="btn-action approve" onclick="aprobarBooking('${b.id}')">Aprobar</button>` : ''}
-                <button class="btn-action reschedule" onclick="abrirRepro('${b.id}')">Reprog.</button>
-                ${b.estado !== 'cancelada' ? `<button class="btn-action cancel" onclick="cancelarBooking('${b.id}')">Cancelar</button>` : ''}
-                <button class="btn-action cancel" onclick="eliminarBooking('${b.id}')" style="background:rgba(255,50,50,0.15);border-color:rgba(255,50,50,0.2);">Eliminar</button>
+                ${b.estado === 'pendiente' ? `<button class="btn-action btn-approve" onclick="aprobarBooking('${b.id}')" title="Aprobar">${ICON_APPROVE}</button>` : ''}
+                <button class="btn-action btn-reschedule" onclick="abrirRepro('${b.id}')" title="Reprogramar">${ICON_RESCHEDULE}</button>
+                ${b.estado !== 'cancelada' ? `<button class="btn-action btn-cancel" onclick="cancelarBooking('${b.id}')" title="Cancelar">${ICON_CANCEL}</button>` : ''}
+                <button class="btn-action btn-delete" onclick="eliminarBooking('${b.id}')" title="Eliminar">${ICON_DELETE}</button>
             </div></td>
         </tr>`;
     }).join('');
@@ -997,12 +1029,12 @@ async function cargarWeeklySlots() {
         html += '<div style="display:flex;flex-direction:column;gap:8px;">';
         grupos[d].forEach(function(s) {
             var activa = s.activo;
-            html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,' + (activa ? '0.02' : '0.01') + ');border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;">';
-            html += '<label class="toggle" style="width:36px;height:20px;flex-shrink:0;">';
+            html += '<div class="ws-row" style="opacity:' + (activa ? '1' : '0.5') + ';">';
+            html += '<label class="toggle">';
             html += '<input type="checkbox" ' + (activa ? 'checked' : '') + ' onchange="toggleWS(' + s.id + ', this.checked)">';
             html += '<span class="slider"></span></label>';
-            html += '<span style="background:rgba(255,255,255,0.05);padding:5px 12px;border-radius:5px;font-size:0.8rem;font-weight:700;letter-spacing:1px;white-space:nowrap;flex:1;">' + s.hora_inicio.substring(0,5) + ' – ' + s.hora_fin.substring(0,5) + '</span>';
-            html += '<button class="btn-action cancel" onclick="eliminarWS(' + s.id + ')" style="padding:4px 10px;font-size:0.7rem;">✕</button>';
+            html += '<span class="ws-time">' + s.hora_inicio.substring(0,5) + ' – ' + s.hora_fin.substring(0,5) + '</span>';
+            html += '<button class="btn-action" onclick="eliminarWS(' + s.id + ')" title="Eliminar">' + ICON_DELETE + '</button>';
             html += '</div>';
         });
         html += '</div></div>';
@@ -1056,12 +1088,12 @@ async function cargarBlockedDates() {
     list.innerHTML = bds.map(b => {
         const [yyyy,mm,dd] = b.fecha.split('-');
         const rango = b.todo_el_dia ? 'Todo el día' : `${(b.hora_inicio||'').substring(0,5)} – ${(b.hora_fin||'').substring(0,5)}`;
-        return `<div style="background:rgba(255,50,50,0.04);border:1px solid rgba(255,50,50,0.1);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        return `<div class="blocked-item">
             <div>
                 <div style="font-weight:800;font-size:0.85rem;">${dd}/${mm}/${yyyy}</div>
                 <div style="font-size:0.75rem;color:#666;margin-top:3px;">${rango}${b.motivo ? ' — '+b.motivo : ''}</div>
             </div>
-            <button class="btn-action cancel" onclick="eliminarBD(${b.id})">Eliminar</button>
+            <button class="btn-action" onclick="eliminarBD(${b.id})" title="Eliminar">${ICON_DELETE}</button>
         </div>`;
     }).join('');
 }
@@ -1132,9 +1164,9 @@ async function cargarBeatsDB() {
                 '</div>' +
             '</div>' +
             '<div class="beat-admin-actions">' +
-                '<button class="btn-action approve" onclick="editarBeat(\'' + b.id + '\')">Editar</button>' +
-                '<button class="btn-action video" onclick="abrirModalVideo(' + b.id + ')" style="background:rgba(100,200,255,0.1);border-color:rgba(100,200,255,0.2);">Video</button>' +
-                '<button class="btn-action cancel" onclick="eliminarBeat(\'' + b.id + '\')">Eliminar</button>' +
+                '<button class="btn-action" onclick="editarBeat(\'' + b.id + '\')" title="Editar">' + ICON_EDIT + '</button>' +
+                '<button class="btn-action btn-preview" onclick="abrirVistaPrevia(' + b.id + ')" title="Vista Previa">' + ICON_PREVIEW + '</button>' +
+                '<button class="btn-action btn-delete" onclick="eliminarBeat(\'' + b.id + '\')" title="Eliminar">' + ICON_DELETE + '</button>' +
             '</div>' +
         '</div>';
     }
@@ -1476,6 +1508,110 @@ async function publicarVideo() {
     }
 }
 
+/* ── Visual Preview (Spotify-style overlay) ────────────── */
+var _vpAnimFrame = null;
+
+function abrirVistaPrevia(beatId) {
+    cerrarVistaPrevia();
+    safeQuery(function() {
+        return supabase.from('beats').select('*').eq('id', beatId).single();
+    }).then(function(res) {
+        var b = res.data;
+        if (!b) return;
+
+        var modal = $('modal-visual-preview');
+        var coverUrl = b.image_url || '../assets/images/asset.webp';
+
+        $('vp-cover').src = coverUrl;
+        $('vp-bg').style.backgroundImage = 'url(' + coverUrl + ')';
+        $('vp-glow').style.background = b.color || 'rgba(255,255,255,0.3)';
+        $('vp-title').textContent = b.titulo || '—';
+        $('vp-meta').textContent = (b.bpm || '--') + ' BPM  ·  ' + (b.genero || '') + '  ·  $' + (b.precio || '0');
+
+        // Reset progress animation
+        var progBar = $('vp-progress-bar');
+        progBar.style.animation = 'none';
+        void progBar.offsetWidth;
+        progBar.style.animation = 'vpProgressScroll 12s linear infinite';
+
+        modal.classList.add('active');
+        iniciarAnimacionVP(b.color || '#ffffff');
+    });
+}
+
+function cerrarVistaPrevia() {
+    detenerAnimacionVP();
+    $('modal-visual-preview').classList.remove('active');
+}
+
+function iniciarAnimacionVP(accentColor) {
+    detenerAnimacionVP();
+    var canvas = $('vp-spectrum');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    var W = canvas.width = canvas.clientWidth;
+    var H = canvas.height = canvas.clientHeight;
+    var bars = 64;
+    var barData = [];
+    var phases = [];
+    for (var i = 0; i < bars; i++) {
+        barData[i] = 0;
+        phases[i] = Math.random() * Math.PI * 2;
+    }
+
+    function draw() {
+        if (!canvas || !ctx) return;
+        W = canvas.width = canvas.clientWidth;
+        H = canvas.height = canvas.clientHeight;
+
+        ctx.clearRect(0, 0, W, H);
+
+        var time = Date.now() / 1000;
+        var barW = W / bars;
+        var gap = 2;
+
+        for (var i = 0; i < bars; i++) {
+            var val = 0;
+            val += Math.sin(time * 2.0 + i * 0.3) * 0.3;
+            val += Math.sin(time * 3.7 + i * 0.7) * 0.2;
+            val += Math.sin(time * 1.3 + i * 1.1) * 0.15;
+            val += Math.sin(time * 5.1 + i * 0.4 + phases[i]) * 0.1;
+            if (i < 8) {
+                var bass = Math.sin(time * 2.8) * 0.5 + 0.5;
+                val += bass * 0.3;
+            }
+            val = Math.max(0, Math.min(1, (val + 1) / 2));
+            barData[i] = barData[i] * 0.85 + val * 0.15;
+
+            var barH = barData[i] * H * 0.9;
+            var x = i * barW + gap / 2;
+            var w = barW - gap;
+
+            var gradient = ctx.createLinearGradient(0, H - barH, 0, H);
+            gradient.addColorStop(0, accentColor);
+            gradient.addColorStop(1, 'rgba(255,255,255,0.05)');
+
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = 0.6 + barData[i] * 0.4;
+            ctx.fillRect(x, H - barH, w, barH);
+            ctx.globalAlpha = 1;
+        }
+
+        _vpAnimFrame = requestAnimationFrame(draw);
+    }
+
+    draw();
+}
+
+function detenerAnimacionVP() {
+    if (_vpAnimFrame) {
+        cancelAnimationFrame(_vpAnimFrame);
+        _vpAnimFrame = null;
+    }
+}
+
 async function eliminarBeat(id) {
     if (!confirm('Eliminar beat?')) return;
     await supabase.from('beats').delete().eq('id', id);
@@ -1502,6 +1638,7 @@ async function editarBeat(id) {
     html += '<div><div class="toggle-wrap" style="padding:0;margin-top:20px;"><label class="toggle"><input type="checkbox" id="edit-featured" ' + (b.featured ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Destacado</div></div></div></div>';
     html += '</div>';
     html += '<div class="form-group"><label class="form-label" for="edit-image-input">Imagen de portada</label><div id="edit-image-drop-zone" class="drop-zone" style="padding:16px;"><div class="dz-placeholder" style="font-size:0.75rem;">Suelta una imagen o haz clic para cambiarla</div><div class="dz-preview"><img id="edit-image-preview" src="' + esc(b.image_url) + '" style="max-height:80px;border-radius:6px;"></div><input type="file" id="edit-image-input" accept="image/*" style="display:none"></div><div id="edit-image-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div></div>';
+    html += '<div class="form-group"><label class="form-label" for="edit-audio-input">Audio (opcional — dejar vacío para mantener el actual)</label><div id="edit-audio-drop-zone" class="drop-zone" style="padding:16px;"><div class="dz-placeholder" style="font-size:0.75rem;">Suelta un audio o haz clic para reemplazarlo</div><div class="dz-preview"><div class="dz-name" id="edit-audio-preview-name" style="font-size:0.75rem;"></div><div class="dz-size" id="edit-audio-preview-size" style="font-size:0.65rem;color:#666;"></div></div><input type="file" id="edit-audio-input" accept="audio/*" style="display:none"></div><div id="edit-audio-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div></div>';
     html += '<div class="toggle-wrap" style="padding:0;"><label class="toggle"><input type="checkbox" id="edit-vendido" ' + (b.vendido ? 'checked' : '') + '><span class="slider"></span></label><div><div class="toggle-label">Vendido</div></div></div>';
     html += '<div id="edit-beat-error" style="display:none;color:#ff6b6b;font-size:0.78rem;"></div>';
     html += '<button type="submit" class="booking-action-btn">Guardar Cambios</button>';
@@ -1547,6 +1684,24 @@ async function editarBeat(id) {
         editDropZone.classList.add('has-file');
     }
 
+    // Drop zone para audio en edición
+    var editAudioFile = null;
+    var editAudioDropZone = document.getElementById('edit-audio-drop-zone');
+    var editAudioInput = document.getElementById('edit-audio-input');
+    editAudioDropZone.addEventListener('click', function() { editAudioInput.click(); });
+    editAudioDropZone.addEventListener('dragover', function(e) { e.preventDefault(); editAudioDropZone.classList.add('drag-over'); });
+    editAudioDropZone.addEventListener('dragleave', function() { editAudioDropZone.classList.remove('drag-over'); });
+    editAudioDropZone.addEventListener('drop', function(e) { e.preventDefault(); editAudioDropZone.classList.remove('drag-over'); if (e.dataTransfer.files.length > 0) handleEditAudio(e.dataTransfer.files[0]); });
+    editAudioInput.addEventListener('change', function() { if (editAudioInput.files.length > 0) handleEditAudio(editAudioInput.files[0]); });
+    function handleEditAudio(file) {
+        if (file.size > 100 * 1024 * 1024) { document.getElementById('edit-audio-error').textContent = 'El audio excede 100MB'; document.getElementById('edit-audio-error').style.display = 'block'; return; }
+        document.getElementById('edit-audio-error').style.display = 'none';
+        editAudioFile = file;
+        document.getElementById('edit-audio-preview-name').textContent = file.name;
+        document.getElementById('edit-audio-preview-size').textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+        editAudioDropZone.classList.add('has-file');
+    }
+
     modal.querySelector('#beat-edit-form').addEventListener('submit', async function(ev) {
         ev.preventDefault();
         var btn = ev.target.querySelector('button[type=submit]');
@@ -1573,6 +1728,16 @@ async function editarBeat(id) {
                 if (imgErr) throw new Error('Error subiendo imagen: ' + imgErr.message);
                 upd.image_url = supabase.storage.from(BEATS_BUCKET).getPublicUrl(imgPath).data.publicUrl;
             } catch(e) { errEl.textContent = e.message || 'Error al subir imagen'; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
+        }
+
+        // Subir nuevo audio si se seleccionó
+        if (editAudioFile) {
+            try {
+                var audioPath = 'public/audio/' + Date.now() + '_' + editAudioFile.name;
+                var { error: audErr } = await supabase.storage.from(BEATS_BUCKET).upload(audioPath, editAudioFile, { upsert: false });
+                if (audErr) throw new Error('Error subiendo audio: ' + audErr.message);
+                upd.audio_url = supabase.storage.from(BEATS_BUCKET).getPublicUrl(audioPath).data.publicUrl;
+            } catch(e) { errEl.textContent = e.message || 'Error al subir audio'; errEl.style.display = 'block'; btn.textContent = 'Guardar Cambios'; btn.disabled = false; return; }
         }
 
         var { error } = await supabase.from('beats').update(upd).eq('id', id);
@@ -1716,22 +1881,22 @@ async function cargarCoupons() {
         const valorStr = c.tipo_descuento === 'porcentaje' ? c.valor + '%' : '$' + parseFloat(c.valor).toFixed(2);
         const expStr = c.fecha_expiracion ? new Date(c.fecha_expiracion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—';
         const asignadoStr = c.asignado_a ? 'Usuario: ' + c.asignado_a.substring(0, 8) + '…' : 'Global';
-        return '<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:14px 16px;">' +
+        return '<div class="coupon-ticket">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
                 '<div style="flex:1;min-width:0;">' +
-                    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                        '<span style="font-weight:900;font-size:0.9rem;letter-spacing:1px;color:' + (c.estado === 'activo' ? '#4caf50' : '#ff5555') + ';">' + esc(c.codigo) + '</span>' +
+                    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+                        '<span class="coupon-code" style="color:' + (c.estado === 'activo' ? '#4caf50' : '#ff5555') + ';">' + esc(c.codigo) + '</span>' +
                         '<span class="badge ' + (c.estado === 'activo' ? 'aprobada' : 'cancelada') + '">' + c.estado + '</span>' +
                     '</div>' +
-                    '<div style="font-size:0.7rem;color:#666;margin-top:4px;">' + valorStr + ' | Vence: ' + expStr + ' | ' + asignadoStr + '</div>' +
-                    '<div style="font-size:0.65rem;color:#555;margin-top:2px;">Límite: ' + (c.max_usos_totales || '∞') + ' totales · ' + c.max_usos_por_usuario + ' por usuario</div>' +
+                    '<div style="font-size:0.7rem;color:#666;margin-top:6px;">' + valorStr + ' &middot; Vence: ' + expStr + ' &middot; ' + asignadoStr + '</div>' +
+                    '<div style="font-size:0.65rem;color:#555;margin-top:2px;">Límite: ' + (c.max_usos_totales || '∞') + ' totales &middot; ' + c.max_usos_por_usuario + ' por usuario</div>' +
                 '</div>' +
                 '<div style="display:flex;gap:6px;flex-shrink:0;">' +
-                    '<label class="toggle" style="width:36px;height:20px;">' +
+                    '<label class="toggle">' +
                         '<input type="checkbox" ' + (c.estado === 'activo' ? 'checked' : '') + ' onchange="toggleCoupon(\'' + c.id + '\', this.checked)">' +
                         '<span class="slider"></span>' +
                     '</label>' +
-                    '<button class="btn-action cancel" onclick="eliminarCoupon(\'' + c.id + '\')" style="padding:4px 10px;font-size:0.7rem;">✕</button>' +
+                    '<button class="btn-action" onclick="eliminarCoupon(\'' + c.id + '\')" title="Eliminar">' + ICON_DELETE + '</button>' +
                 '</div>' +
             '</div>' +
         '</div>';

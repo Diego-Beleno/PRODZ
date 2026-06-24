@@ -275,6 +275,10 @@ DROP POLICY IF EXISTS "bookings_update_admin" ON public.bookings;
 CREATE POLICY "bookings_update_admin" ON public.bookings
   FOR UPDATE USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "bookings_delete_admin" ON public.bookings;
+CREATE POLICY "bookings_delete_admin" ON public.bookings
+  FOR DELETE USING (true);
+
 -- beats (público lectura, escritura pública)
 DROP POLICY IF EXISTS "beats_select_public" ON public.beats;
 CREATE POLICY "beats_select_public" ON public.beats
