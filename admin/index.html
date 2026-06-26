@@ -722,7 +722,17 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="camp-title">Título</label>
-                            <input type="text" id="camp-title" class="form-input" placeholder="Ej: 🇻🇪 Unidos por Venezuela">
+                            <input type="text" id="camp-title" class="form-input" placeholder="Ej: Unidos por Venezuela">
+                        </div>
+                        <div style="display:flex;gap:12px;margin:0 0 20px;flex-wrap:wrap;">
+                            <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                                <label class="form-label" for="camp-flag-emoji">Emoji de Bandera</label>
+                                <input type="text" id="camp-flag-emoji" class="form-input" placeholder="Ej: 🇻🇪">
+                            </div>
+                            <div class="form-group" style="flex:2;min-width:200px;margin-bottom:0;">
+                                <label class="form-label" for="camp-analytics-event">Nombre Evento Analítica</label>
+                                <input type="text" id="camp-analytics-event" class="form-input" placeholder="Ej: click_donation_venezuela">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="camp-message">Mensaje</label>
@@ -733,16 +743,18 @@
                             <input type="url" id="camp-primary-url" class="form-input" placeholder="https://caritasvenezuela.org">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="camp-primary-label">Texto del Botón Principal</label>
-                            <input type="text" id="camp-primary-label" class="form-input" placeholder="Ej: Ver Canales de Ayuda / Donar Direct">
+                            <label class="form-label" for="camp-primary-label">Texto del Botón (único)</label>
+                            <input type="text" id="camp-primary-label" class="form-input" placeholder="Ej: Donar Ahora">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="camp-secondary-url">URL Secundaria (opcional)</label>
-                            <input type="url" id="camp-secondary-url" class="form-input" placeholder="https://cruzrojavenezolana.org">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="camp-secondary-label">Texto del Botón Secundario</label>
-                            <input type="text" id="camp-secondary-label" class="form-input" placeholder="Ej: Donar vía Cruz Roja">
+                        <div style="display:flex;gap:12px;margin:0 0 20px;flex-wrap:wrap;">
+                            <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                                <label class="form-label" for="camp-banner-speed">Velocidad cinta (seg)</label>
+                                <input type="number" id="camp-banner-speed" class="form-input" placeholder="60" min="10" max="300" step="5">
+                            </div>
+                            <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                                <label class="form-label" for="camp-banner-accent">Color acento cinta</label>
+                                <input type="text" id="camp-banner-accent" class="form-input" placeholder="#ffffff">
+                            </div>
                         </div>
                         <div id="camp-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
                         <div id="camp-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
@@ -2101,11 +2113,13 @@ async function cargarConfig() {
         $('camp-show-modal').checked = cfg.showModal !== false;
         $('camp-show-banner').checked = cfg.showBanner !== false;
         $('camp-title').value = cfg.title || '';
+        $('camp-flag-emoji').value = cfg.flagEmoji || '🇻🇪';
+        $('camp-analytics-event').value = cfg.analyticsEventName || 'click_donation_venezuela';
         $('camp-message').value = cfg.message || '';
         $('camp-primary-url').value = cfg.primaryUrl || '';
         $('camp-primary-label').value = cfg.primaryLabel || '';
-        $('camp-secondary-url').value = cfg.secondaryUrl || '';
-        $('camp-secondary-label').value = cfg.secondaryLabel || '';
+        $('camp-banner-speed').value = cfg.bannerSpeed || 60;
+        $('camp-banner-accent').value = cfg.bannerAccent || '#ffffff';
     }
 
     $('campaign-form').addEventListener('submit', async (e) => {
@@ -2121,11 +2135,13 @@ async function cargarConfig() {
             showModal: $('camp-show-modal').checked,
             showBanner: $('camp-show-banner').checked,
             title: $('camp-title').value.trim(),
+            flagEmoji: $('camp-flag-emoji').value.trim() || '🇻🇪',
+            analyticsEventName: $('camp-analytics-event').value.trim() || 'click_donation_venezuela',
             message: $('camp-message').value.trim(),
             primaryUrl: $('camp-primary-url').value.trim(),
             primaryLabel: $('camp-primary-label').value.trim(),
-            secondaryUrl: $('camp-secondary-url').value.trim(),
-            secondaryLabel: $('camp-secondary-label').value.trim()
+            bannerSpeed: parseInt($('camp-banner-speed').value) || 60,
+            bannerAccent: $('camp-banner-accent').value.trim() || '#ffffff'
         };
 
         if (!payload.title || !payload.message || !payload.primaryUrl || !payload.primaryLabel) {
@@ -2144,7 +2160,7 @@ async function cargarConfig() {
             await supabase.from('app_config').insert([{ key: 'solidarity_campaign', value: payload }]);
         }
 
-        ok.textContent = 'Campaña guardada. ' + (payload.isActive ? 'Activa' : 'Inactiva') + ' | Modal: ' + (payload.showModal ? 'Sí' : 'No') + ' | Banner: ' + (payload.showBanner ? 'Sí' : 'No');
+        ok.textContent = 'Campaña guardada. ' + (payload.isActive ? 'Activa' : 'Inactiva') + ' | Banner: ' + (payload.bannerSpeed || 60) + 's';
         ok.style.display = 'block';
         btn.textContent = 'Guardar Campaña';
         btn.disabled = false;

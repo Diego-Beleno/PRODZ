@@ -367,11 +367,11 @@ REVOKE EXECUTE ON FUNCTION public.asignar_admin FROM anon, authenticated;
 --   "showBanner": true,
 --   "flagEmoji": "🇻🇪",
 --   "title": "Unidos por Venezuela",
---   "message": "Ante el reciente terremoto que ha afectado a tantas familias, hemos decidido aportar nuestro grano de arena. El 100% de los ingresos recaudados a través de esta página web será donado directamente a las familias que lo necesiten. Si deseas colaborar de manera directa o conocer los canales oficiales de apoyo y centros de acopio, puedes hacerlo a través del siguiente enlace:",
+--   "message": "Ante el reciente terremoto que ha afectado a tantas familias, hemos decidido aportar nuestro grano de arena. El 100% de los ingresos recaudados a través de esta página web será donado directamente a las familias que lo necesiten.",
 --   "primaryUrl": "https://caritasvenezuela.org",
---   "primaryLabel": "Ver Canales de Ayuda / Donar Direct",
---   "secondaryUrl": "https://cruzrojavenezolana.org",
---   "secondaryLabel": "Donar vía Cruz Roja"
+--   "primaryLabel": "Donar Ahora",
+--   "bannerSpeed": 60,
+--   "bannerAccent": "#ffffff"
 -- }'::jsonb) ON CONFLICT (key) DO NOTHING;
 -- 2026-06-16: Add orden column for manual beat reordering
 -- ALTER TABLE public.beats ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;

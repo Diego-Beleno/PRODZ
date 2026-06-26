@@ -2,10 +2,14 @@
 :root {
     --bg-color: #050505;
     --text-color: #ffffff;
-    --accent-color: #ffffff; 
+    --accent-color: #ffffff;
     --card-bg: #111111;
     --transition-speed: 0.4s;
     --max-width: 1200px;
+    --banner-height: 0px;
+    --navbar-height: 60px;
+    --banner-speed: 60s;
+    --banner-accent-color: #ccc;
 }
 
 * {
@@ -110,6 +114,10 @@ body {
     font-size: clamp(3rem, 15vw, 7rem); /* Primera palabra más imponente */
 }
 
+@keyframes pulseEnter {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+}
 .click-to-start {
     font-size: 0.8rem;
     letter-spacing: 4px;
@@ -2273,16 +2281,6 @@ input[type="time"]::-webkit-datetime-edit {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(255,255,255,0.15);
 }
-.campaign-btn-secondary {
-    background: transparent;
-    color: #aaa;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.campaign-btn-secondary:hover {
-    border-color: rgba(255,255,255,0.3);
-    color: #fff;
-    transform: translateY(-2px);
-}
 .campaign-dismiss-btn {
     background: transparent;
     border: none;
@@ -2309,12 +2307,13 @@ input[type="time"]::-webkit-datetime-edit {
 
 /* ── Campaign Banner (marquesina) ───────────────────── */
 .campaign-banner {
-    position: relative;
-    z-index: 900;
+    position: sticky;
+    top: var(--navbar-height, 60px);
+    z-index: 999;
     background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
     border-bottom: 1px solid rgba(255,255,255,0.06);
     overflow: hidden;
-    height: 40px;
+    height: var(--banner-height, 0px);
     display: flex;
     align-items: center;
 }
@@ -2331,9 +2330,9 @@ input[type="time"]::-webkit-datetime-edit {
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: #ccc;
-    line-height: 40px;
-    animation: bannerScroll 35s linear infinite;
+    color: var(--banner-accent-color, #ccc);
+    line-height: var(--banner-height, 40px);
+    animation: bannerScroll var(--banner-speed, 60s) linear infinite;
     padding-left: 100%;
     will-change: transform;
 }
@@ -2347,7 +2346,7 @@ input[type="time"]::-webkit-datetime-edit {
     height: 36px;
     background: transparent;
     border: none;
-    color: #555;
+    color: var(--banner-accent-color, #555);
     font-size: 1.2rem;
     cursor: pointer;
     display: flex;
@@ -2355,16 +2354,16 @@ input[type="time"]::-webkit-datetime-edit {
     justify-content: center;
     transition: color 0.3s ease;
     margin-right: 4px;
+    opacity: 0.5;
 }
 .campaign-banner-close:hover {
-    color: #fff;
+    color: var(--banner-accent-color, #fff);
+    opacity: 1;
 }
 @media (max-width: 768px) {
-    .campaign-banner { height: 34px; }
     .campaign-banner-text {
         font-size: 0.65rem;
         letter-spacing: 1px;
-        line-height: 34px;
-        animation-duration: 25s;
+        line-height: var(--banner-height, 34px);
     }
 }

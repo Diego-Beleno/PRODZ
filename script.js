@@ -747,46 +747,68 @@ document.getElementById('booking-confirm-btn')?.addEventListener('click', async 
 });
 
 /* ══ CAMPAIGN MODAL + BANNER ════════════════════════════ */
-const CAMPAIGN_DISMISS_KEY = 've_campaign_dismissed';
+const CAMPAIGN_DISMISS_KEY = 've_earthquake_dismissed';
 const BANNER_DISMISS_KEY = 've_banner_dismissed';
 
 function cerrarIntro() {
     tagAudio.pause();
     tagAudio.currentTime = 0;
+
+    const transitionHandler = (e) => {
+        if (e.propertyName === 'opacity') {
+            loader.style.display = 'none';
+            loader.removeEventListener('transitionend', transitionHandler);
+            mostrarCampaniaInmediata();
+            checkCampaignAsync();
+        }
+    };
+    loader.addEventListener('transitionend', transitionHandler);
     loader.style.opacity = '0';
-    setTimeout(() => {
-        loader.style.display = 'none';
-        setTimeout(() => checkCampaign(), 600);
-    }, 800);
 }
 
-async function checkCampaign() {
+function mostrarCampaniaInmediata() {
+    const cfg = window.SOLIDARITY_CONFIG || {};
+    if (!cfg.isActive) return;
+
+    if (cfg.showBanner !== false) {
+        const bannerDismissed = localStorage.getItem(BANNER_DISMISS_KEY);
+        if (!bannerDismissed) {
+            mostrarBanner(cfg);
+        }
+    }
+    if (cfg.showModal !== false) {
+        const modalDismissed = localStorage.getItem(CAMPAIGN_DISMISS_KEY);
+        if (!modalDismissed) {
+            mostrarModal(cfg);
+        }
+    }
+}
+
+async function checkCampaignAsync() {
     try {
         const { data } = await supabase
             .from('app_config')
             .select('value')
             .eq('key', 'solidarity_campaign')
             .single();
-        const cfg = data ? data.value : {};
-        if (!cfg || !cfg.isActive) return;
+        if (data && data.value) {
+            const cfg = window.SOLIDARITY_CONFIG || {};
+            Object.assign(cfg, data.value);
+            window.SOLIDARITY_CONFIG = cfg;
 
-        // ── Banner (marquesina) ──
-        if (cfg.showBanner !== false) {
-            const bannerDismissed = sessionStorage.getItem(BANNER_DISMISS_KEY);
-            if (!bannerDismissed) {
+            if (!cfg.isActive) {
+                document.getElementById('campaign-banner').style.display = 'none';
+                document.getElementById('campaign-modal').classList.remove('active');
+                return;
+            }
+
+            const bannerEl = document.getElementById('campaign-banner');
+            if (bannerEl.style.display !== 'none') {
                 mostrarBanner(cfg);
             }
         }
-
-        // ── Modal ──
-        if (cfg.showModal !== false) {
-            const modalDismissed = sessionStorage.getItem(CAMPAIGN_DISMISS_KEY);
-            if (!modalDismissed) {
-                mostrarModal(cfg);
-            }
-        }
     } catch (e) {
-        console.error('Error cargando campaña:', e);
+        console.error('Error actualizando campaña desde Supabase:', e);
     }
 }
 
@@ -798,7 +820,6 @@ function mostrarModal(cfg) {
     const title = document.getElementById('campaign-title');
     const msg = document.getElementById('campaign-message');
     const btnPrimary = document.getElementById('campaign-btn-primary');
-    const btnSecondary = document.getElementById('campaign-btn-secondary');
 
     document.getElementById('campaign-content').style.display = '';
 
@@ -807,17 +828,8 @@ function mostrarModal(cfg) {
     if (msg) msg.innerHTML = (cfg.message || '').replace(/\n/g, '<br>');
 
     if (btnPrimary) {
-        btnPrimary.href = cfg.primaryUrl || '#';
-        btnPrimary.textContent = cfg.primaryLabel || 'Ver Canales de Ayuda / Donar';
-    }
-    if (btnSecondary) {
-        if (cfg.secondaryUrl && cfg.secondaryLabel) {
-            btnSecondary.href = cfg.secondaryUrl;
-            btnSecondary.textContent = cfg.secondaryLabel;
-            btnSecondary.style.display = '';
-        } else {
-            btnSecondary.style.display = 'none';
-        }
+        btnPrimary.href = cfg.primaryDonationUrl || cfg.primaryUrl || '#';
+        btnPrimary.textContent = cfg.primaryLabel || 'Donar Ahora';
     }
 
     modal.classList.add('active');
@@ -828,36 +840,53 @@ function mostrarBanner(cfg) {
     const textEl = document.getElementById('campaign-banner-text');
     if (!banner || !textEl) return;
 
-    // Texto: emoji + título + resumen del mensaje + CTA
     var resumen = (cfg.message || '').substring(0, 180);
     if (cfg.message && cfg.message.length > 180) resumen += '…';
-    var cta = cfg.primaryLabel || 'Ver Canales de Ayuda';
-    textEl.textContent = (cfg.flagEmoji || '🇻🇪') + '  ' + (cfg.title || '').toUpperCase() + '  ·  ' + resumen + '  →  ' + cta + '  ·  ' + cfg.primaryUrl + '  ·  ';
+    var cta = cfg.primaryLabel || 'Donar Ahora';
+    const primaryUrl = cfg.primaryDonationUrl || cfg.primaryUrl || '#';
+    textEl.textContent = (cfg.flagEmoji || '🇻🇪') + '  ' + (cfg.title || '').toUpperCase() + '  ·  ' + resumen + '  →  ' + cta + '  ·  ' + primaryUrl + '  ·  ';
+
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        document.documentElement.style.setProperty('--navbar-height', navbar.offsetHeight + 'px');
+    }
+
+    const isMobile = window.innerWidth <= 768;
+    document.documentElement.style.setProperty('--banner-height', isMobile ? '34px' : '40px');
+
+    if (cfg.bannerSpeed) {
+        document.documentElement.style.setProperty('--banner-speed', cfg.bannerSpeed + 's');
+    }
+    if (cfg.bannerAccent) {
+        document.documentElement.style.setProperty('--banner-accent-color', cfg.bannerAccent);
+    }
 
     banner.style.display = 'flex';
-    banner._primaryUrl = cfg.primaryUrl || '#';
+    banner._primaryUrl = primaryUrl;
+    banner._analyticsEventName = cfg.analyticsEventName || 'click_donation_venezuela';
 }
 
 document.getElementById('close-campaign-modal')?.addEventListener('click', () => {
-    sessionStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+    localStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
     document.getElementById('campaign-modal')?.classList.remove('active');
 });
 
 document.getElementById('campaign-modal')?.addEventListener('click', (e) => {
     if (e.target.id === 'campaign-modal') {
-        sessionStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+        localStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
         e.target.classList.remove('active');
     }
 });
 
 document.getElementById('campaign-dismiss-btn')?.addEventListener('click', () => {
-    sessionStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+    localStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
     document.getElementById('campaign-modal')?.classList.remove('active');
 });
 
 document.getElementById('campaign-banner-close')?.addEventListener('click', () => {
-    sessionStorage.setItem(BANNER_DISMISS_KEY, '1');
+    localStorage.setItem(BANNER_DISMISS_KEY, '1');
     document.getElementById('campaign-banner').style.display = 'none';
+    document.documentElement.style.setProperty('--banner-height', '0px');
 });
 
 document.getElementById('campaign-banner-track')?.addEventListener('click', (e) => {
@@ -865,6 +894,13 @@ document.getElementById('campaign-banner-track')?.addEventListener('click', (e) 
     var banner = document.getElementById('campaign-banner');
     if (banner && banner._primaryUrl && banner._primaryUrl !== '#') {
         window.open(banner._primaryUrl, '_blank', 'noopener,noreferrer');
+    }
+});
+
+window.addEventListener('resize', () => {
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        document.documentElement.style.setProperty('--navbar-height', navbar.offsetHeight + 'px');
     }
 });
 

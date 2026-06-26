@@ -23,6 +23,14 @@
     </div>
 </div>
 
+<!-- Campaign Banner (marquesina) -->
+<div id="campaign-banner" class="campaign-banner" style="display:none;">
+    <div class="campaign-banner-track" id="campaign-banner-track" title="Abrir enlace de donación">
+        <span class="campaign-banner-text" id="campaign-banner-text"></span>
+    </div>
+    <button id="campaign-banner-close" class="campaign-banner-close" title="Cerrar">&times;</button>
+</div>
+
 <nav class="navbar" id="main-nav">
     <div class="nav-container">
         <a href="https://instagram.com/prodzz/" target="_blank" class="logo-link">
@@ -38,14 +46,6 @@
         </div>
     </div>
 </nav>
-
-<!-- Campaign Banner (marquesina) -->
-<div id="campaign-banner" class="campaign-banner" style="display:none;">
-    <div class="campaign-banner-track" id="campaign-banner-track" title="Abrir enlace de donación">
-        <span class="campaign-banner-text" id="campaign-banner-text"></span>
-    </div>
-    <button id="campaign-banner-close" class="campaign-banner-close" title="Cerrar">&times;</button>
-</div>
 
 <main>
     <div class="search-bar-container">
@@ -193,10 +193,7 @@
                     <p class="campaign-commitment">El 100% de los ingresos recaudados en este sitio será donado directamente a las familias afectadas.</p>
                     <div class="campaign-actions" id="campaign-actions">
                         <a id="campaign-btn-primary" class="campaign-btn campaign-btn-primary" href="#" target="_blank" rel="noopener noreferrer">
-                            Ver Canales de Ayuda
-                        </a>
-                        <a id="campaign-btn-secondary" class="campaign-btn campaign-btn-secondary" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
-                            Donar vía Cruz Roja
+                            Donar Ahora
                         </a>
                     </div>
                     <button class="campaign-dismiss-btn" id="campaign-dismiss-btn">Continuar al sitio</button>
@@ -301,6 +298,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     <script src="supabase-config.js"></script>
+    <script src="config/solidarityCampaign.js"></script>
     <script src="script.js"></script>
 
 </body>
