@@ -359,6 +359,20 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.asignar_admin FROM anon, authenticated;
 
 -- ══ MIGRATIONS ═══════════════════════════════════════════════════════════
+-- 2026-06-26: Campaign Module (Solidarity Campaign)
+-- Insertar config inicial de campaña en app_config (modal + banner):
+-- INSERT INTO public.app_config (key, value) VALUES ('solidarity_campaign', '{
+--   "isActive": true,
+--   "showModal": true,
+--   "showBanner": true,
+--   "flagEmoji": "🇻🇪",
+--   "title": "Unidos por Venezuela",
+--   "message": "Ante el reciente terremoto que ha afectado a tantas familias, hemos decidido aportar nuestro grano de arena. El 100% de los ingresos recaudados a través de esta página web será donado directamente a las familias que lo necesiten. Si deseas colaborar de manera directa o conocer los canales oficiales de apoyo y centros de acopio, puedes hacerlo a través del siguiente enlace:",
+--   "primaryUrl": "https://caritasvenezuela.org",
+--   "primaryLabel": "Ver Canales de Ayuda / Donar Direct",
+--   "secondaryUrl": "https://cruzrojavenezolana.org",
+--   "secondaryLabel": "Donar vía Cruz Roja"
+-- }'::jsonb) ON CONFLICT (key) DO NOTHING;
 -- 2026-06-16: Add orden column for manual beat reordering
 -- ALTER TABLE public.beats ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0;
 -- Luego: UPDATE beats SET orden = sub.rn FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC) - 1 AS rn FROM beats) sub WHERE beats.id = sub.id;

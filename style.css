@@ -2193,4 +2193,178 @@ input[type="time"]::-webkit-datetime-edit {
     #modal-visual-preview .vp-spectrum { height: 48px; }
 }
 
+/* ── Campaign Modal ─────────────────────────────────── */
+.campaign-modal-root .campaign-modal-card {
+    max-width: 480px;
+    text-align: center;
+}
+.campaign-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+.campaign-flag-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.campaign-title {
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #fff;
+}
+.campaign-divider {
+    width: 50px;
+    height: 3px;
+    background: var(--accent-color, #fff);
+    border-radius: 2px;
+    opacity: 0.4;
+}
+.campaign-message {
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.7;
+    text-align: center;
+    max-width: 400px;
+}
+.campaign-commitment {
+    font-size: 0.8rem;
+    color: #4caf50;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(76,175,80,0.08);
+    border: 1px solid rgba(76,175,80,0.15);
+    border-radius: 8px;
+    padding: 10px 16px;
+    width: 100%;
+}
+.campaign-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 4px;
+}
+.campaign-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+.campaign-btn-primary {
+    background: #fff;
+    color: #000;
+    border: none;
+}
+.campaign-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255,255,255,0.15);
+}
+.campaign-btn-secondary {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.campaign-btn-secondary:hover {
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
+    transform: translateY(-2px);
+}
+.campaign-dismiss-btn {
+    background: transparent;
+    border: none;
+    color: #555;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-family: 'Inter', sans-serif;
+    transition: color 0.3s ease;
+}
+.campaign-dismiss-btn:hover {
+    color: #888;
+}
+@media (max-width: 480px) {
+    .campaign-flag-icon { font-size: 2.8rem; }
+    .campaign-title { font-size: 1.15rem; }
+    .campaign-message { font-size: 0.8rem; }
+    .campaign-btn { padding: 14px; font-size: 0.72rem; }
+    .campaign-modal-card { padding: 24px 20px !important; }
+}
 
+/* ── Campaign Banner (marquesina) ───────────────────── */
+.campaign-banner {
+    position: relative;
+    z-index: 900;
+    background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+.campaign-banner-track {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+}
+.campaign-banner-text {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #ccc;
+    line-height: 40px;
+    animation: bannerScroll 35s linear infinite;
+    padding-left: 100%;
+    will-change: transform;
+}
+@keyframes bannerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+.campaign-banner-close {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    color: #555;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+    margin-right: 4px;
+}
+.campaign-banner-close:hover {
+    color: #fff;
+}
+@media (max-width: 768px) {
+    .campaign-banner { height: 34px; }
+    .campaign-banner-text {
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+        line-height: 34px;
+        animation-duration: 25s;
+    }
+}

@@ -287,12 +287,7 @@ if (loader) {
         }
     });
 }
-function cerrarIntro() {
-    tagAudio.pause();
-    tagAudio.currentTime = 0;
-    loader.style.opacity = '0';
-    setTimeout(() => { loader.style.display = 'none'; }, 800);
-}
+
 
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn-license') && !e.target.classList.contains('sold')) {
@@ -749,6 +744,128 @@ document.getElementById('booking-confirm-btn')?.addEventListener('click', async 
     resetCalendarState();
     document.querySelectorAll('.calendar-day.selected').forEach(el => el.classList.remove('selected'));
     document.getElementById('slots-container').style.display = 'none';
+});
+
+/* ══ CAMPAIGN MODAL + BANNER ════════════════════════════ */
+const CAMPAIGN_DISMISS_KEY = 've_campaign_dismissed';
+const BANNER_DISMISS_KEY = 've_banner_dismissed';
+
+function cerrarIntro() {
+    tagAudio.pause();
+    tagAudio.currentTime = 0;
+    loader.style.opacity = '0';
+    setTimeout(() => {
+        loader.style.display = 'none';
+        setTimeout(() => checkCampaign(), 600);
+    }, 800);
+}
+
+async function checkCampaign() {
+    try {
+        const { data } = await supabase
+            .from('app_config')
+            .select('value')
+            .eq('key', 'solidarity_campaign')
+            .single();
+        const cfg = data ? data.value : {};
+        if (!cfg || !cfg.isActive) return;
+
+        // ── Banner (marquesina) ──
+        if (cfg.showBanner !== false) {
+            const bannerDismissed = sessionStorage.getItem(BANNER_DISMISS_KEY);
+            if (!bannerDismissed) {
+                mostrarBanner(cfg);
+            }
+        }
+
+        // ── Modal ──
+        if (cfg.showModal !== false) {
+            const modalDismissed = sessionStorage.getItem(CAMPAIGN_DISMISS_KEY);
+            if (!modalDismissed) {
+                mostrarModal(cfg);
+            }
+        }
+    } catch (e) {
+        console.error('Error cargando campaña:', e);
+    }
+}
+
+function mostrarModal(cfg) {
+    const modal = document.getElementById('campaign-modal');
+    if (!modal) return;
+
+    const flag = document.getElementById('campaign-flag-icon');
+    const title = document.getElementById('campaign-title');
+    const msg = document.getElementById('campaign-message');
+    const btnPrimary = document.getElementById('campaign-btn-primary');
+    const btnSecondary = document.getElementById('campaign-btn-secondary');
+
+    document.getElementById('campaign-content').style.display = '';
+
+    if (flag) flag.textContent = cfg.flagEmoji || '🇻🇪';
+    if (title) title.textContent = cfg.title || 'Unidos por Venezuela';
+    if (msg) msg.innerHTML = (cfg.message || '').replace(/\n/g, '<br>');
+
+    if (btnPrimary) {
+        btnPrimary.href = cfg.primaryUrl || '#';
+        btnPrimary.textContent = cfg.primaryLabel || 'Ver Canales de Ayuda / Donar';
+    }
+    if (btnSecondary) {
+        if (cfg.secondaryUrl && cfg.secondaryLabel) {
+            btnSecondary.href = cfg.secondaryUrl;
+            btnSecondary.textContent = cfg.secondaryLabel;
+            btnSecondary.style.display = '';
+        } else {
+            btnSecondary.style.display = 'none';
+        }
+    }
+
+    modal.classList.add('active');
+}
+
+function mostrarBanner(cfg) {
+    const banner = document.getElementById('campaign-banner');
+    const textEl = document.getElementById('campaign-banner-text');
+    if (!banner || !textEl) return;
+
+    // Texto: emoji + título + resumen del mensaje + CTA
+    var resumen = (cfg.message || '').substring(0, 180);
+    if (cfg.message && cfg.message.length > 180) resumen += '…';
+    var cta = cfg.primaryLabel || 'Ver Canales de Ayuda';
+    textEl.textContent = (cfg.flagEmoji || '🇻🇪') + '  ' + (cfg.title || '').toUpperCase() + '  ·  ' + resumen + '  →  ' + cta + '  ·  ' + cfg.primaryUrl + '  ·  ';
+
+    banner.style.display = 'flex';
+    banner._primaryUrl = cfg.primaryUrl || '#';
+}
+
+document.getElementById('close-campaign-modal')?.addEventListener('click', () => {
+    sessionStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+    document.getElementById('campaign-modal')?.classList.remove('active');
+});
+
+document.getElementById('campaign-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'campaign-modal') {
+        sessionStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+        e.target.classList.remove('active');
+    }
+});
+
+document.getElementById('campaign-dismiss-btn')?.addEventListener('click', () => {
+    sessionStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+    document.getElementById('campaign-modal')?.classList.remove('active');
+});
+
+document.getElementById('campaign-banner-close')?.addEventListener('click', () => {
+    sessionStorage.setItem(BANNER_DISMISS_KEY, '1');
+    document.getElementById('campaign-banner').style.display = 'none';
+});
+
+document.getElementById('campaign-banner-track')?.addEventListener('click', (e) => {
+    if (e.target.id === 'campaign-banner-close') return;
+    var banner = document.getElementById('campaign-banner');
+    if (banner && banner._primaryUrl && banner._primaryUrl !== '#') {
+        window.open(banner._primaryUrl, '_blank', 'noopener,noreferrer');
+    }
 });
 
 // ── Inicialización ───────────────────────────────────────────

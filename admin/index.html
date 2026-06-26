@@ -305,6 +305,9 @@
             <li class="admin-menu-item" id="tab-btn-config">
                 <button onclick="switchTab('config')">Config</button>
             </li>
+            <li class="admin-menu-item" id="tab-btn-campaign">
+                <button onclick="switchTab('campaign')">Campaña</button>
+            </li>
         </ul>
 
         <div style="margin-top:auto;padding-top:30px;border-top:1px solid rgba(255,255,255,0.05);">
@@ -675,6 +678,80 @@
             </div>
         </div>
 
+        <!-- ══ TAB: CAMPAIGN ════════════════════════════════ -->
+        <div id="panel-campaign" class="tab-panel">
+            <div style="max-width:600px;">
+                <div class="calendar-wrapper">
+                    <h3 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Campaña Solidaria</h3>
+                    <p style="font-size:0.75rem;color:#666;margin-bottom:20px;line-height:1.5;">
+                        Administra la campaña de apoyo que aparece en la página principal después del intro.
+                        Actívala solo cuando haya una campaña vigente. Los cambios se reflejan inmediatamente.
+                    </p>
+                    <form id="campaign-form">
+                        <div class="toggle-wrap">
+                            <label class="toggle">
+                                <input type="checkbox" id="camp-active">
+                                <span class="slider"></span>
+                            </label>
+                            <div>
+                                <div class="toggle-label">Campaña Activa</div>
+                                <div class="toggle-hint">Switch maestro: activa o desactiva todo (modal + banner)</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;margin:12px 0 20px;flex-wrap:wrap;">
+                            <div class="toggle-wrap" style="padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.05);flex:1;min-width:160px;">
+                                <label class="toggle" style="margin:0;">
+                                    <input type="checkbox" id="camp-show-modal" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <div>
+                                    <div class="toggle-label">Modal</div>
+                                    <div class="toggle-hint">Ventana emergente post-intro</div>
+                                </div>
+                            </div>
+                            <div class="toggle-wrap" style="padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.05);flex:1;min-width:160px;">
+                                <label class="toggle" style="margin:0;">
+                                    <input type="checkbox" id="camp-show-banner" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <div>
+                                    <div class="toggle-label">Banner</div>
+                                    <div class="toggle-hint">Cinta marquesina bajo el menú</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="camp-title">Título</label>
+                            <input type="text" id="camp-title" class="form-input" placeholder="Ej: 🇻🇪 Unidos por Venezuela">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="camp-message">Mensaje</label>
+                            <textarea id="camp-message" class="form-input" rows="6" placeholder="Escribe el mensaje de la campaña..." style="resize:vertical;font-family:inherit;min-height:120px;line-height:1.6;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="camp-primary-url">URL Principal (donación)</label>
+                            <input type="url" id="camp-primary-url" class="form-input" placeholder="https://caritasvenezuela.org">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="camp-primary-label">Texto del Botón Principal</label>
+                            <input type="text" id="camp-primary-label" class="form-input" placeholder="Ej: Ver Canales de Ayuda / Donar Direct">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="camp-secondary-url">URL Secundaria (opcional)</label>
+                            <input type="url" id="camp-secondary-url" class="form-input" placeholder="https://cruzrojavenezolana.org">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="camp-secondary-label">Texto del Botón Secundario</label>
+                            <input type="text" id="camp-secondary-label" class="form-input" placeholder="Ej: Donar vía Cruz Roja">
+                        </div>
+                        <div id="camp-error" style="display:none;color:#ff6b6b;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <div id="camp-success" style="display:none;color:#4caf50;font-size:0.78rem;margin-bottom:12px;"></div>
+                        <button type="submit" class="booking-action-btn">Guardar Campaña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -904,7 +981,8 @@ async function initAdminPanel() {
             cargarBeatsDB(),
             cargarReferidos(),
             cargarCoupons(),
-            cargarConfig()
+            cargarConfig(),
+            cargarCampaign()
         ]);
 
         $('admin-logout-btn').addEventListener('click', async () => {
@@ -924,11 +1002,11 @@ window.addEventListener('load', initAdminPanel);
 
 /* ── Tabs ────────────────────────────────────────────── */
 function switchTab(tab) {
-    ['bookings','weekly-slots','blocked-dates','beats','referrals','coupons','config'].forEach(t => {
+    ['bookings','weekly-slots','blocked-dates','beats','referrals','coupons','config','campaign'].forEach(t => {
         $(`panel-${t}`).classList.toggle('active', t === tab);
         $(`tab-btn-${t}`).classList.toggle('active', t === tab);
     });
-    const titles = { bookings:'Reservas', 'weekly-slots':'Horarios Semanales', 'blocked-dates':'Bloqueos', beats:'Catálogo de Beats', referrals:'Referidos', coupons:'Cupones', config:'Configuración' };
+    const titles = { bookings:'Reservas', 'weekly-slots':'Horarios Semanales', 'blocked-dates':'Bloqueos', beats:'Catálogo de Beats', referrals:'Referidos', coupons:'Cupones', config:'Configuración', campaign:'Campaña' };
     $('admin-page-title').textContent = titles[tab];
 }
 
@@ -1982,36 +2060,95 @@ async function cargarConfig() {
     }
 }
 
-$('config-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const err = $('config-error');
-    const ok  = $('config-success');
-    const btn = e.target.querySelector('button[type=submit]');
-    err.style.display = 'none';
-    ok.style.display = 'none';
+    $('config-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = $('config-error');
+        const ok  = $('config-success');
+        const btn = e.target.querySelector('button[type=submit]');
+        err.style.display = 'none';
+        ok.style.display = 'none';
 
-    const tasa = parseFloat($('config-tasa').value);
-    if (!tasa || tasa <= 0) {
-        err.textContent = 'Ingresa una tasa válida mayor a 0';
-        err.style.display = 'block';
-        return;
+        const tasa = parseFloat($('config-tasa').value);
+        if (!tasa || tasa <= 0) {
+            err.textContent = 'Ingresa una tasa válida mayor a 0';
+            err.style.display = 'block';
+            return;
+        }
+
+        btn.textContent = 'Guardando...';
+        btn.disabled = true;
+
+        const { data: existing } = await supabase.from('app_config').select('id').eq('key', 'tasa_cambio_bs').single();
+        if (existing) {
+            await supabase.from('app_config').update({ value: tasa, updated_at: new Date().toISOString() }).eq('key', 'tasa_cambio_bs');
+        } else {
+            await supabase.from('app_config').insert([{ key: 'tasa_cambio_bs', value: tasa }]);
+        }
+
+        ok.textContent = 'Tasa actualizada: 1 USD = ' + tasa + ' Bs';
+        ok.style.display = 'block';
+        btn.textContent = 'Guardar Tasa';
+        btn.disabled = false;
+    });
+
+    /* ── Campaign ────────────────────────────────────────── */
+    async function cargarCampaign() {
+        const { data } = await safeQuery(() =>
+            supabase.from('app_config').select('value').eq('key', 'solidarity_campaign').single()
+        );
+        const cfg = data ? data.value : {};
+        $('camp-active').checked = cfg.isActive === true;
+        $('camp-show-modal').checked = cfg.showModal !== false;
+        $('camp-show-banner').checked = cfg.showBanner !== false;
+        $('camp-title').value = cfg.title || '';
+        $('camp-message').value = cfg.message || '';
+        $('camp-primary-url').value = cfg.primaryUrl || '';
+        $('camp-primary-label').value = cfg.primaryLabel || '';
+        $('camp-secondary-url').value = cfg.secondaryUrl || '';
+        $('camp-secondary-label').value = cfg.secondaryLabel || '';
     }
 
-    btn.textContent = 'Guardando...';
-    btn.disabled = true;
+    $('campaign-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = $('camp-error');
+        const ok  = $('camp-success');
+        const btn = e.target.querySelector('button[type=submit]');
+        err.style.display = 'none';
+        ok.style.display = 'none';
 
-    const { data: existing } = await supabase.from('app_config').select('id').eq('key', 'tasa_cambio_bs').single();
-    if (existing) {
-        await supabase.from('app_config').update({ value: tasa, updated_at: new Date().toISOString() }).eq('key', 'tasa_cambio_bs');
-    } else {
-        await supabase.from('app_config').insert([{ key: 'tasa_cambio_bs', value: tasa }]);
-    }
+        const payload = {
+            isActive: $('camp-active').checked,
+            showModal: $('camp-show-modal').checked,
+            showBanner: $('camp-show-banner').checked,
+            title: $('camp-title').value.trim(),
+            message: $('camp-message').value.trim(),
+            primaryUrl: $('camp-primary-url').value.trim(),
+            primaryLabel: $('camp-primary-label').value.trim(),
+            secondaryUrl: $('camp-secondary-url').value.trim(),
+            secondaryLabel: $('camp-secondary-label').value.trim()
+        };
 
-    ok.textContent = 'Tasa actualizada: 1 USD = ' + tasa + ' Bs';
-    ok.style.display = 'block';
-    btn.textContent = 'Guardar Tasa';
-    btn.disabled = false;
-});
+        if (!payload.title || !payload.message || !payload.primaryUrl || !payload.primaryLabel) {
+            err.textContent = 'Completa al menos: Título, Mensaje, URL Principal y su texto.';
+            err.style.display = 'block';
+            return;
+        }
+
+        btn.textContent = 'Guardando...';
+        btn.disabled = true;
+
+        const { data: existing } = await supabase.from('app_config').select('id').eq('key', 'solidarity_campaign').single();
+        if (existing) {
+            await supabase.from('app_config').update({ value: payload, updated_at: new Date().toISOString() }).eq('key', 'solidarity_campaign');
+        } else {
+            await supabase.from('app_config').insert([{ key: 'solidarity_campaign', value: payload }]);
+        }
+
+        ok.textContent = 'Campaña guardada. ' + (payload.isActive ? 'Activa' : 'Inactiva') + ' | Modal: ' + (payload.showModal ? 'Sí' : 'No') + ' | Banner: ' + (payload.showBanner ? 'Sí' : 'No');
+        ok.style.display = 'block';
+        btn.textContent = 'Guardar Campaña';
+        btn.disabled = false;
+    });
 </script>
 
 </body>
