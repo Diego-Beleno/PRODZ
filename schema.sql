@@ -368,7 +368,7 @@ REVOKE EXECUTE ON FUNCTION public.asignar_admin FROM anon, authenticated;
 --   "flagEmoji": "🇻🇪",
 --   "title": "Unidos por Venezuela",
 --   "message": "Ante el reciente terremoto que ha afectado a tantas familias, hemos decidido aportar nuestro grano de arena. El 100% de los ingresos recaudados a través de esta página web será donado directamente a las familias que lo necesiten.",
---   "primaryUrl": "https://caritasvenezuela.org",
+--   "primaryDonationUrl": "https://caritasvenezuela.org",
 --   "primaryLabel": "Donar Ahora",
 --   "bannerSpeed": 60,
 --   "bannerAccent": "#ffffff"

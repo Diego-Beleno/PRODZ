@@ -2116,7 +2116,7 @@ async function cargarConfig() {
         $('camp-flag-emoji').value = cfg.flagEmoji || '🇻🇪';
         $('camp-analytics-event').value = cfg.analyticsEventName || 'click_donation_venezuela';
         $('camp-message').value = cfg.message || '';
-        $('camp-primary-url').value = cfg.primaryUrl || '';
+        $('camp-primary-url').value = cfg.primaryDonationUrl || cfg.primaryUrl || '';
         $('camp-primary-label').value = cfg.primaryLabel || '';
         $('camp-banner-speed').value = cfg.bannerSpeed || 60;
         $('camp-banner-accent').value = cfg.bannerAccent || '#ffffff';
@@ -2138,13 +2138,13 @@ async function cargarConfig() {
             flagEmoji: $('camp-flag-emoji').value.trim() || '🇻🇪',
             analyticsEventName: $('camp-analytics-event').value.trim() || 'click_donation_venezuela',
             message: $('camp-message').value.trim(),
-            primaryUrl: $('camp-primary-url').value.trim(),
+            primaryDonationUrl: $('camp-primary-url').value.trim(),
             primaryLabel: $('camp-primary-label').value.trim(),
             bannerSpeed: parseInt($('camp-banner-speed').value, 10) || 60,
             bannerAccent: $('camp-banner-accent').value.trim() || '#ffffff'
         };
 
-        if (!payload.title || !payload.message || !payload.primaryUrl || !payload.primaryLabel) {
+        if (!payload.title || !payload.message || !payload.primaryDonationUrl || !payload.primaryLabel) {
             err.textContent = 'Completa al menos: Título, Mensaje, URL Principal y su texto.';
             err.style.display = 'block';
             return;
