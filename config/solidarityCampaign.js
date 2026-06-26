@@ -3,7 +3,7 @@
 
 const SOLIDARITY_CONFIG = {
     isActive: true,
-    primaryDonationUrl: "https://caritasvenezuela.org",
+    primaryDonationUrl: "https://terremoto.hazlohoy.org",
     analyticsEventName: "click_donation_venezuela",
     flagEmoji: "\u{1F1FB}\u{1F1EA}",
     title: "Unidos por Venezuela",
