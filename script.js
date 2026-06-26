@@ -747,44 +747,10 @@ document.getElementById('booking-confirm-btn')?.addEventListener('click', async 
 });
 
 /* ══ CAMPAIGN MODAL + BANNER ════════════════════════════ */
-const CAMPAIGN_DISMISS_KEY = 've_earthquake_dismissed';
 const BANNER_DISMISS_KEY = 've_banner_dismissed';
+var _campaignModalDismissed = false;
 
-function cerrarIntro() {
-    tagAudio.pause();
-    tagAudio.currentTime = 0;
-
-    const transitionHandler = (e) => {
-        if (e.propertyName === 'opacity') {
-            loader.style.display = 'none';
-            loader.removeEventListener('transitionend', transitionHandler);
-            mostrarCampaniaInmediata();
-            checkCampaignAsync();
-        }
-    };
-    loader.addEventListener('transitionend', transitionHandler);
-    loader.style.opacity = '0';
-}
-
-function mostrarCampaniaInmediata() {
-    const cfg = window.SOLIDARITY_CONFIG || {};
-    if (!cfg.isActive) return;
-
-    if (cfg.showBanner !== false) {
-        const bannerDismissed = localStorage.getItem(BANNER_DISMISS_KEY);
-        if (!bannerDismissed) {
-            mostrarBanner(cfg);
-        }
-    }
-    if (cfg.showModal !== false) {
-        const modalDismissed = localStorage.getItem(CAMPAIGN_DISMISS_KEY);
-        if (!modalDismissed) {
-            mostrarModal(cfg);
-        }
-    }
-}
-
-async function checkCampaignAsync() {
+async function prefetchCampaignConfig() {
     try {
         const { data } = await supabase
             .from('app_config')
@@ -795,21 +761,37 @@ async function checkCampaignAsync() {
             const cfg = window.SOLIDARITY_CONFIG || {};
             Object.assign(cfg, data.value);
             window.SOLIDARITY_CONFIG = cfg;
+        }
+    } catch (e) {
+        console.error('Error precargando campaña:', e);
+    }
+}
 
-            if (!cfg.isActive) {
-                document.getElementById('campaign-banner').style.display = 'none';
-                document.getElementById('campaign-modal').classList.remove('active');
-                return;
-            }
+function cerrarIntro() {
+    tagAudio.pause();
+    tagAudio.currentTime = 0;
 
-            const bannerEl = document.getElementById('campaign-banner');
-            if (bannerEl.style.display !== 'none') {
+    const cfg = window.SOLIDARITY_CONFIG || {};
+    if (cfg.isActive) {
+        if (cfg.showBanner !== false) {
+            const bannerDismissed = localStorage.getItem(BANNER_DISMISS_KEY);
+            if (!bannerDismissed) {
                 mostrarBanner(cfg);
             }
         }
-    } catch (e) {
-        console.error('Error actualizando campaña desde Supabase:', e);
+        if (cfg.showModal !== false && !_campaignModalDismissed) {
+            mostrarModal(cfg);
+        }
     }
+
+    loader.style.opacity = '0';
+    const transitionHandler = (e) => {
+        if (e.propertyName === 'opacity') {
+            loader.style.display = 'none';
+            loader.removeEventListener('transitionend', transitionHandler);
+        }
+    };
+    loader.addEventListener('transitionend', transitionHandler);
 }
 
 function mostrarModal(cfg) {
@@ -846,15 +828,11 @@ function mostrarBanner(cfg) {
     const primaryUrl = cfg.primaryDonationUrl || cfg.primaryUrl || '#';
     textEl.textContent = (cfg.flagEmoji || '🇻🇪') + '  ' + (cfg.title || '').toUpperCase() + '  ·  ' + resumen + '  →  ' + cta + '  ·  ' + primaryUrl + '  ·  ';
 
-    const navbar = document.querySelector('.navbar');
-    if (navbar) {
-        document.documentElement.style.setProperty('--navbar-height', navbar.offsetHeight + 'px');
-    }
-
     const isMobile = window.innerWidth <= 768;
     document.documentElement.style.setProperty('--banner-height', isMobile ? '34px' : '40px');
 
     if (cfg.bannerSpeed) {
+        textEl.style.animationDuration = cfg.bannerSpeed + 's';
         document.documentElement.style.setProperty('--banner-speed', cfg.bannerSpeed + 's');
     }
     if (cfg.bannerAccent) {
@@ -867,19 +845,19 @@ function mostrarBanner(cfg) {
 }
 
 document.getElementById('close-campaign-modal')?.addEventListener('click', () => {
-    localStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+    _campaignModalDismissed = true;
     document.getElementById('campaign-modal')?.classList.remove('active');
 });
 
 document.getElementById('campaign-modal')?.addEventListener('click', (e) => {
     if (e.target.id === 'campaign-modal') {
-        localStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+        _campaignModalDismissed = true;
         e.target.classList.remove('active');
     }
 });
 
 document.getElementById('campaign-dismiss-btn')?.addEventListener('click', () => {
-    localStorage.setItem(CAMPAIGN_DISMISS_KEY, '1');
+    _campaignModalDismissed = true;
     document.getElementById('campaign-modal')?.classList.remove('active');
 });
 
@@ -897,14 +875,8 @@ document.getElementById('campaign-banner-track')?.addEventListener('click', (e) 
     }
 });
 
-window.addEventListener('resize', () => {
-    const navbar = document.querySelector('.navbar');
-    if (navbar) {
-        document.documentElement.style.setProperty('--navbar-height', navbar.offsetHeight + 'px');
-    }
-});
-
 // ── Inicialización ───────────────────────────────────────────
+prefetchCampaignConfig();
 renderAuthWidget();
 checkPendingBooking();
 initCalendar();

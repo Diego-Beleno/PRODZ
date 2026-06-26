@@ -7,7 +7,6 @@
     --transition-speed: 0.4s;
     --max-width: 1200px;
     --banner-height: 0px;
-    --navbar-height: 60px;
     --banner-speed: 60s;
     --banner-accent-color: #ccc;
 }
@@ -126,11 +125,16 @@ body {
     animation: pulseEnter 2s infinite;
 }
 
-/* --- 3. NAVBAR --- */
-.navbar {
+/* --- 2B. HEADER WRAPPER (sticky container) --- */
+.header-wrapper {
     position: sticky;
     top: 0;
     z-index: 1000;
+}
+
+/* --- 3. NAVBAR --- */
+.navbar {
+    position: relative;
     background: rgba(5, 5, 5, 0.8);
     backdrop-filter: blur(10px);
     padding: 15px 20px;
@@ -2307,9 +2311,7 @@ input[type="time"]::-webkit-datetime-edit {
 
 /* ── Campaign Banner (marquesina) ───────────────────── */
 .campaign-banner {
-    position: sticky;
-    top: var(--navbar-height, 60px);
-    z-index: 999;
+    position: relative;
     background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
     border-bottom: 1px solid rgba(255,255,255,0.06);
     overflow: hidden;

@@ -7,6 +7,8 @@ const SOLIDARITY_CONFIG = {
     analyticsEventName: "click_donation_venezuela",
     flagEmoji: "\u{1F1FB}\u{1F1EA}",
     title: "Unidos por Venezuela",
+    message: "Ante el reciente terremoto que ha afectado a tantas familias, hemos decidido aportar nuestro grano de arena. El 100% de los ingresos recaudados a trav\u00E9s de esta p\u00E1gina web ser\u00E1 donado directamente a las familias que lo necesiten.",
+    primaryLabel: "Donar Ahora",
     bannerSpeed: 60,
     bannerAccent: "#ffffff"
 };

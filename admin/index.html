@@ -740,7 +740,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="camp-primary-url">URL Principal (donación)</label>
-                            <input type="url" id="camp-primary-url" class="form-input" placeholder="https://caritasvenezuela.org">
+                            <input type="text" id="camp-primary-url" class="form-input" placeholder="https://caritasvenezuela.org">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="camp-primary-label">Texto del Botón (único)</label>
@@ -2140,7 +2140,7 @@ async function cargarConfig() {
             message: $('camp-message').value.trim(),
             primaryUrl: $('camp-primary-url').value.trim(),
             primaryLabel: $('camp-primary-label').value.trim(),
-            bannerSpeed: parseInt($('camp-banner-speed').value) || 60,
+            bannerSpeed: parseInt($('camp-banner-speed').value, 10) || 60,
             bannerAccent: $('camp-banner-accent').value.trim() || '#ffffff'
         };
 
